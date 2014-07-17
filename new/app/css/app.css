@@ -1,0 +1,80 @@
+body {
+	margin: 0;
+	padding: 0;
+	font-family: Verdana, Arial;
+	font-size: 12px;
+	background-repeat: repeat;
+	background-image: url(../img/bg-greylines.gif);
+	background-color: #fff;
+}
+.topBar {
+	width: 100%;
+	height: 85px;
+	background-image: url(../img/logo.gif);
+	background-repeat: no-repeat;
+	background-color: #223e6e;
+}
+.panel-default {
+	border-radius: 0;
+	color: #084980;
+}
+.panel-morgan {
+	border-radius: 0;
+	background-color: #223e6e;
+	color: #fff;
+}
+.panel-morgan .title {
+	width: 100%;
+	font-size: 18px;
+	line-height: 20px;
+	padding-bottom: 15px;
+	border-bottom: 1px solid rgb(74,100,151);
+}
+
+.radio-container {
+	margin: 10px 0;
+}
+
+.radio-container .radio-inline {
+
+}	
+.input-container {
+	margin-top: 20px;
+}
+.input-container label{
+	line-height: 24px;
+	margin: 0;
+	padding: 0;
+	font-size: 16px;
+	font-weight: normal;
+}
+.input-container input{
+	height: 24px;
+	border-radius: 0;
+	padding: 0;
+}
+
+.button-container button{
+	border-radius: 0;
+	color: #084980;
+	width: 115px;
+}
+.date-container {
+	font-size: 14px;
+}
+
+.date-container input {
+	width: 100px;
+}
+
+.nav-tabs > li > a {
+	border-radius: 0;
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+	color: #084980;
+}
+
+a {
+	color: #084980;
+}
