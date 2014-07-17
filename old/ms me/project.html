@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap 101 Template</title>
+
+  <!-- 新 Bootstrap 核心 CSS 文件 -->
+  <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+  <!-- 可选的Bootstrap主题文件（一般不用引入） -->
+  <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+
+  <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+  <script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+
+  <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+  <script src="http://cdn.bootcss.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+  <script type="text/javascript" src="js/jquery.js"></script>
+  <script src="js/highcharts.js"></script>
+  <script type="text/javascript">
+$(function () {
+        $('#container').highcharts({
+            title: {
+                text: 'Monthly Average Temperature',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Source: WorldClimate.com',
+                x: -20
+            },
+            xAxis: {
+                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            },
+            yAxis: {
+                title: {
+                    text: 'Temperature (°C)'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                valueSuffix: '°C'
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle',
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Tokyo',
+                data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
+            }, {
+                name: 'New York',
+                data: [-0.2, 0.8, 5.7, 11.3, 17.0, 22.0, 24.8, 24.1, 20.1, 14.1, 8.6, 2.5]
+            }, {
+                name: 'Berlin',
+                data: [-0.9, 0.6, 3.5, 8.4, 13.5, 17.0, 18.6, 17.9, 14.3, 9.0, 3.9, 1.0]
+            }, {
+                name: 'London',
+                data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8]
+            }]
+        });
+    });
+    
+
+    </script>
+</head>
+
+<body>
+  <!-- Fixed navbar -->
+  <div class="navbar navbar-inverse" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">MS ME tool</a>
+      </div>
+      <div class="navbar-collapse collapse">
+        <ul class="nav navbar-nav">
+
+          <li>
+            <a href="load.html">Data</a>
+          </li>
+          <li class="active">
+            <a href="project.html">Projection</a>
+          </li>
+        </ul>
+      </div>
+      <!--/.nav-collapse --> </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-1 sidebar"></div>
+      <div class="col-sm-10">
+        <div class="col-sm-3">
+          <h3>Data Filter</h3>
+          <h4>Start Time:</h4>
+          <div class="input-group">
+
+            <input type="text" class="form-control" placeholder="Year">
+            <span class="input-group-addon">@</span>
+
+            <input type="text" class="form-control" placeholder="Month">
+            <span class="input-group-addon">@</span>
+          </div>
+          <h4>End Time:</h4>
+          <div class="input-group">
+
+            <input type="text" class="form-control" placeholder="Year">
+            <span class="input-group-addon">@</span>
+
+            <input type="text" class="form-control" placeholder="Month">
+            <span class="input-group-addon">@</span>
+          </div>
+
+          <div class="input-group" style="margin-top:10px;">
+            <button class="btn btn-primary">Submit</button>
+          </div>
+
+        </div>
+        <div class="col-sm-9">
+          <div class="alert alert-warning alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert">
+              <span aria-hidden="true">&times;</span>
+              <span class="sr-only">Close</span>
+            </button> <strong>Warning!</strong>
+            Better check yourself, you're not looking too good.
+          </div>
+          <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+        </div>
+
+      </div>
+      <div class="col-sm-1"></div>
+    </div>
+  </div>
+
+</body>
+
+</html>
