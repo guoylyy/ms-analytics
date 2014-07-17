@@ -14,6 +14,14 @@ body {
   background-repeat: no-repeat;
   background-color: #223e6e;
 }
+.back_home{
+  position: relative;
+  width: 220px;
+  height: 50px;
+  top:25px;
+  left: 10px;
+  cursor: pointer;
+}
 .panel-default {
   border-radius: 0;
   color: #084980;
@@ -23,14 +31,18 @@ body {
   background-color: #223e6e;
   color: #fff;
 }
-.panel-morgan .title {
+.panel-morgan .title,.container .title {
   width: 100%;
   font-size: 18px;
   line-height: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid rgb(74,100,151);
 }
-
+.chart-panel-title{
+  line-height: 30px;
+  padding-top: 15px;
+  padding-left: 18px;
+}
 .radio-container {
   margin: 10px 0;
 }
@@ -84,3 +96,5 @@ a {
   width: 810px;
   height: 400px;
 }
+.n_footerBg{background-color:#cdcfd1; height:30px; min-width:1003px;text-align: center;}
+.n_footer{width:100%; *width:1003px; text-align:center; font-family:Arial; font-size:10px; color:#666666; padding-top:10px; padding-left:45px;}
