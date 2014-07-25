@@ -1,7 +1,6 @@
 'use strict';
 
 /* Controllers */
-
 var MyAppController = angular.module('myApp.controllers', []);
   
 
@@ -13,14 +12,24 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 	_scope.current_tab = "recent";
 
 	DataService.loadData(function(){
+        /*
+            Initial Current Chart
+        */
 		_scope.start_month = DataService.start_month;
 		_scope.end_month = DataService.end_month;
-		//Initial Current Chart
+        if(_scope.current_month.toString() == _scope.end_month){
+		    _scope.need_update = false;
+        }else{
+            _scope.need_update = true;
+        }
 		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month);
 		_scope.recent_chart = initialResentChart(_scope.recent_data,categories,_scope.end_month);
 	});
 
 	_scope.compare = function(){
+        /*
+            Compare the current prediction value with actual value 
+        */
 		var input_data = getInputData();
 		if(input_data!=null){
 			//start change current chart
@@ -31,7 +40,9 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 		}
 	}
 	_scope.actual = function(){
-		//clear or hidden the data of input
+		/*
+            clear or hidden the data of input
+        */
 		if(_scope.recent_chart.series[0].visible){
 			_scope.recent_chart.series[0].hide();
 		}else{
@@ -39,11 +50,13 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 		}
 	}
 	_scope.change_src = function(target){
-		_scope.recent_data =  DataService.getCurrentData(getDataPickerType(_scope.current_data_src),_scope.end_month);
-		_scope.recent_chart.series[0].setData(_scope.recent_data);
+		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+'_real',_scope.end_month);
+        _scope.recent_chart.series[0].setData(_scope.recent_data);
 		_scope.recent_chart.series[2].setData([0,0,0]);
 		_scope.recent_chart.series[1].hide();
 		_scope.recent_chart.series[2].hide();
+        var title = 'Month End Projection of ' + _scope.current_data_src;
+        _scope.recent_chart.setTitle({text: title});        
 	}
 }]);
   
@@ -83,6 +96,8 @@ MyAppController.controller('HistroyCtrl', ['$scope','DataService', function($sco
 		_scope.history_chart.series[0].setData(rc[0]);
 		_scope.history_chart.series[1].setData(rc[1]);
 		_scope.history_chart.series[2].setData(rc[2]);
+        var title = 'History Projection of ' + _scope.current_data_src + ' ('+ mePickerType(_scope.current_data_me) +')';
+        _scope.history_chart.setTitle({text: title});      
 	}
 
 }]);
@@ -123,7 +138,7 @@ function initialHistoryChart(data,categories,start_month,end_month){
 	var sub_title = "From "+ start_month + " to "+end_month;
 	var chart = new Highcharts.Chart({
             title: {
-                text: 'History Projection',
+                text: 'History Projection of Memos',
                 x: -20 //center
             },
             chart:{
@@ -187,7 +202,7 @@ function initialHistoryChart(data,categories,start_month,end_month){
 function initialResentChart(data,categories,end_month){
 	var chart = new Highcharts.Chart({
             title: {
-                text: 'Month End Projection',
+                text: 'Month End Projection of Memos',
                 x: -20 //center
             },
             chart:{

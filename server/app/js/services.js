@@ -58,7 +58,6 @@ function getMonths(all_datas){
 		month_list.sort();
 	}
 	return month_list;
-	
 }
 
 
