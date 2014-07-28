@@ -67,6 +67,8 @@ class MediaParamterQuery(object):
 	def get_mp(self, year_month):
 		return MediaParamter.query.filter(year=year_month[0], month=year_month[1])
 
+	
+
 class PredictionQuery(object):
 	def __init__(slef):
 		pass
