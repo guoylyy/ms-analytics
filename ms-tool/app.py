@@ -1,12 +1,13 @@
 import os
 import random
-from datetime import datetime
+import json
+from datetime import datetime,timedelta
 from flask import Flask, request, flash, url_for, redirect, \
      render_template, abort
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import Serializer, fields, pprint
 from werkzeug import secure_filename
-from modeling_open import DataPrepare
+from modeling_open import DataPrepare,NewTest
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'csv'])
@@ -20,6 +21,7 @@ def _date2str(date):
     return date.strftime('%m/%d/%Y')
 
 class FactQuery(object):
+	mes = ['ME-1','ME+1','ME']
 	def __init__(self):
 		self.load()
 
@@ -28,6 +30,7 @@ class FactQuery(object):
 		fact_keys = []
 		fact_list = []
 		fact_date_keys = []
+		me_facts = {}
 		for f in facts:
 			fact_date_keys.append(f.datetime)
 			fact_keys.append(_date2str(f.datetime))
@@ -36,9 +39,22 @@ class FactQuery(object):
 			data.append(f.memos)
 			data.append(f.trasaction)
 			fact_list.append(data)
+			if f.me in self.mes:
+				dt = f.datetime
+				if f.me == 'ME-1' or f.me == 'ME':
+					dt = dt + timedelta(days=10)
+				key = "%s-%s" % (dt.year,dt.month)
+				if key in me_facts.keys():
+					me_facts[key].append(f)
+				else:
+					me_facts[key] = [f]
+		self.me_facts = me_facts
 		self.fact_keys = fact_keys
 		self.fact_list = fact_list
 		self.fact_date_keys = sorted(fact_date_keys)
+
+	def get_me_facts(self):
+		return self.me_facts
 
 	def get_start_date(self):
 		return self.fact_date_keys[0]
@@ -46,8 +62,20 @@ class FactQuery(object):
 	def get_end_date(self):
 		return self.fact_date_keys[len(self.fact_date_keys)-1]
 
+	def get_dates(self):
+		return self.fact_date_keys
+
+	def get_months(self):
+		month_list = []
+		for dt in self.fact_date_keys:
+			key = (dt.year,dt.month)
+			if key not in month_list:
+				month_list.append(key)
+		return month_list
+
+
 	def insert_from_map(self, data_map):
-		db_fact_keys = self.get_facts()
+		db_fact_keys = self.fact_date_keys
 		for key in data_map.keys():
 			data = data_map[key]
 			fact = Fact(_str2date(data[0]),data[1],data[2],data[3])
@@ -56,6 +84,9 @@ class FactQuery(object):
 		flag =  db.session.commit()
 		self.load()
 		return flag
+
+	def get_data(self):
+		return self.fact_list
 
 	def get_period_data(self, froms, end):
 		pass
@@ -67,15 +98,23 @@ class MediaParamterQuery(object):
 	def get_mp(self, year_month):
 		return MediaParamter.query.filter(year=year_month[0], month=year_month[1])
 
-	
-
 class PredictionQuery(object):
-	def __init__(slef):
-		pass
+	def __init__(self):
+		self.load()
 
-	def get_prediction(self, year_month):
-		#todo
-		pass
+	def load(self):
+		predicts = Prediction.query.filter(Prediction.ff==0.95)
+		m = {}
+		for predict in predicts:
+			key = "%s-%s" %(predict.year,predict.month)
+			if key in m.keys():
+				m[key].append(predict)
+			else:
+				m[key] = [predict]
+		self.predict_map = m
+
+	def get_predictions(self):
+		return self.predict_map
 
 class Fact(db.Model):
 	__tablename__ = 'fact'
@@ -96,12 +135,14 @@ class Prediction(db.Model):
 	month = db.Column(db.Integer, primary_key=True)
 	model_type = db.Column(db.String, primary_key=True)
 	value = db.Column(db.Float)
+	ff = db.Column(db.Float, primary_key=True)
 
-	def __init__(self, year, month, value, model_type):
+	def __init__(self, year, month, value, model_type, ff):
 		self.year = year
 		self.month = month
 		self.value = value
 		self.model_type = model_type
+		self.ff = ff
 
 	def as_dict(self):
 		return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -111,6 +152,7 @@ class PredictionSerializer(Serializer):
 	month = fields.Integer()
 	model_type = fields.String()
 	value = fields.Float()
+	ff = fields.Float()
 
 class MediaParamter(db.Model):
 	__tablename__ = 'media_parameter'
@@ -208,7 +250,10 @@ def predict_data():
 	return:
 		json
 	"""
-	return render_template('index.html'
+	pjs =  make_predict_json()
+	reals =  make_real_json()
+	m = [pjs[0],pjs[1],reals[0],reals[1]]
+	return render_template('json.html',msg=json.dumps(m)
 		)
 
 def init_dict_tables():
@@ -290,8 +335,91 @@ def init_db():
 def drop_db():
 	db.drop_all()
 
+def year_month_sort(year_months):
+	date_list = []
+	for d in year_months:
+		l = d.split('-')
+		year,month = (int(l[0]),int(l[1]))
+		date_list.append(datetime(year=year, month=month, day=1))
+	date_list = sorted(date_list, reverse=True)
+	return [ str(x.year)+'-'+str(x.month) for x in date_list]
+
+def _print_year_month(year_month):
+	l = year_month.split('-')
+	year,month = (int(l[0]),int(l[1]))
+	month = "%02d"%month
+	return str(year)+'-'+month
+
+def make_real_json():
+	#get real
+	fq = FactQuery()
+	me_facts = fq.get_me_facts()
+
+	memos_values = []
+	trasaction_values = []
+	keys = year_month_sort(me_facts.keys())
+	for key in keys:
+		memos = {}
+		trasaction = {}
+		for fact in me_facts[key]:
+			if fact.me == 'ME':
+				memos['me'] = fact.memos
+				trasaction['me'] = fact.trasaction
+			elif fact.me == 'ME-1':
+				memos['me-1'] = fact.memos
+				trasaction['me-1'] = fact.trasaction
+			elif fact.me == 'ME+1':
+				memos['me+1'] = fact.memos
+				trasaction['me+1'] = fact.trasaction
+		memos['month'] = _print_year_month(key)
+		trasaction['month'] = _print_year_month(key)
+		memos_values.append(memos)
+		trasaction_values.append(trasaction)
+	return (_get_data_map(memos_values,'memos',False),_get_data_map(trasaction_values,'transaction',False))
+
+
+def make_predict_json():
+	me_couple = {'mme':'me','mmem1':'me-1','mmep1':'me+1',\
+				 'tme':'me','tmem1':'me-1','tmep1':'me+1'}
+	p = PredictionQuery()
+	pre_facts = p.get_predictions()
+	pre_memos_values = []
+	pre_trasaction_values = []
+	keys = year_month_sort(pre_facts.keys())
+	for key in keys:
+		mm = {'month':_print_year_month(key)}
+		tm = {'month':_print_year_month(key)}
+		for fact in pre_facts[key]:
+			if fact.model_type not in me_couple.keys():
+				continue
+			if fact.model_type[0]=='m':
+				mm[me_couple[fact.model_type]] = fact.value
+			elif fact.model_type[0]=='t':
+				tm[me_couple[fact.model_type]] = fact.value
+		pre_trasaction_values.append(tm)
+		pre_memos_values.append(mm)
+
+	return (_get_data_map(pre_memos_values,'memos',True),_get_data_map(pre_trasaction_values,'transaction',True))	
+
+def _get_data_map(dlist,dtype,is_predict):
+	m = {}
+	m['endMonth'] = dlist[0]['month']
+	m['startMonth'] = dlist[len(dlist)-1]['month']
+	m['isPredict'] = is_predict;
+	m['type'] = dtype
+	m['values'] = dlist
+	return m
+
+def predict():
+	fq = FactQuery()
+	nt = NewTest()
+	results = nt.run(fq.get_data(),fq.get_months(),fq.get_me_facts())
+	for p in results:
+		predict = Prediction(p['year'],p['month'],p['value'],p['model_type'],p['ff'])
+		db.session.add(predict)
+	db.session.commit()
+
 if __name__ == '__main__':
-	#init_media_parameter_table()
 	app.run()
-	#print app.config['START_MONTH']
+
 	

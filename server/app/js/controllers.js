@@ -50,7 +50,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 		}
 	}
 	_scope.change_src = function(target){
-		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+'_real',_scope.end_month);
+		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+'_predict',_scope.end_month);
         _scope.recent_chart.series[0].setData(_scope.recent_data);
 		_scope.recent_chart.series[2].setData([0,0,0]);
 		_scope.recent_chart.series[1].hide();
@@ -163,7 +163,7 @@ function initialHistoryChart(data,categories,start_month,end_month){
                 },
                 {
                 title: {
-                    text: '%'
+                    text: 'APE%'
                 },
                 max:100,
                 min:0,
@@ -227,7 +227,7 @@ function initialResentChart(data,categories,end_month){
                 },
                 {
                 title: {
-                    text: '%'
+                    text: 'APE%'
                 },
                 max:100,
                 min:0,

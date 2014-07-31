@@ -13,6 +13,10 @@ import traceback
 import numpy as np
 
 ############################## Internal Functions ############################
+def _next_year_month(year_month):
+    dt = datetime.datetime(year=year_month[0],month=year_month[1],day=28) + datetime.timedelta(days=10)
+    return (dt.year,dt.month)
+
 
 def _str2date(string):
     return datetime.datetime.strptime(string, '%m/%d/%Y')
@@ -667,7 +671,7 @@ class NewTest(object):
             beta[i] = []
             for j in range(0, size):
                 beta[i].append(random.normalvariate(mu, sigma))
-        print beta
+        #print beta
         return beta
 
     def generate_p(self, size, mu=0, sigma=1):
@@ -678,9 +682,9 @@ class NewTest(object):
                 p[i][j][j] = random.normalvariate(mu, sigma)
         return p
 
-    def run(self):
-        filepath = "uploads/data.csv"
-        data = DataPrepare(filepath).get_data()
+    def run(self,data,months,me_facts):
+        #filepath = "uploads/data.csv"
+        data = data
         beta = {
             'tmem1': self.generate_beta(3),
             'tmemean': self.generate_beta(3),
@@ -699,28 +703,67 @@ class NewTest(object):
             'mme': self.generate_p(2),
             'mmep1': self.generate_p(4),
         }
+        months = months[4:]
+        index = 0 
+        final_list = []
+        for year_month in months:
+            index = index + 1
+            print "%s-%s" %(year_month)
+            next_month = _next_year_month(year_month)
+            print next_month
+            result1 = Modeling().do_predict(beta, data, year_month)
+            for k in result1:
+                #print k
+                #print 'x:' + ' ' * 2 + str(result1[k]['x'])
+                print 'y:' + ' ' * 2 + str(result1[k]['y'])
+                for key in result1[k]['y'].keys():
+                    m = {}
+                    m['year'] = next_month[0]
+                    m['month'] = next_month[1]
+                    m['model_type'] = k
+                    m['value'] = (float)("%0.2f"%result1[k]['y'][key])
+                    m['ff'] = key
+                    final_list.append(m)
 
-        result1 = Modeling().do_predict(beta, data, (2014, 4))
-        for k in result1:
-            print k
-            print 'x:' + ' ' * 2 + str(result1[k]['x'])
-            print 'y:' + ' ' * 2 + str(result1[k]['y'])
+            if(index==len(months)):
+                break
+            x, y_pred, y = {}, {}, {}
+            for i in result1.keys():
+                x[i] = result1[i]['x']
+                y_pred[i] = result1[i]['y']
 
-        x, y_pred, y = {}, {}, {}
-        for i in result1.keys():
-            x[i] = result1[i]['x']
-            y_pred[i] = result1[i]['y']
-            y[i] = 10
+            y = self.get_real(me_facts,months[index])
+            
+            result2 = Modeling().do_revise(beta, p, x, y_pred, y)
+            for k in result2:
+                beta[k] = result2[k]['beta']
+                p[k] = result2[k]['p']
+                #print k
+                #print 'beta:' + ' ' * 2 + str(result2[k]['beta'])
+                #print 'p:' + ' ' * 2 + str(result2[k]['p'])        
+            print '==========='
+        return final_list
+    
+    def get_real(self,me_facts,year_month):
+        key = "%s-%s" % year_month
+        y = {}
+        all_me = 0
+        for f in me_facts[key]:
+            all_me = all_me + f.trasaction
+            if f.me == 'ME':
+                y['mme'] = f.memos
+                y['tme'] = f.trasaction
+            elif f.me == 'ME+1':
+                y['mmep1'] = f.memos
+                y['tmep1'] = f.trasaction
+            elif f.me == 'ME-1':
+                y['mmem1'] = f.memos
+                y['tmem1'] = f.trasaction
+        y['tmemean'] = all_me/3
+        return y
 
-        result2 = Modeling().do_revise(beta, p, x, y_pred, y)
-        for k in result2:
-            print k
-            print 'beta:' + ' ' * 2 + str(result2[k]['beta'])
-            print 'p:' + ' ' * 2 + str(result2[k]['p'])        
 
-
-
-def main():
+#def main():
     #t = Test()
     #t.test_model()
     #tmem1 = t.test_tmem1()['x']
@@ -732,10 +775,12 @@ def main():
     #t.test_mmep1(mme)
     #t.test_modeling()
     
-    tt = NewTest()
-    tt.run()
+    #tt = NewTest()
+    #tt.run()
     #filepath = 'uploads/data.csv'
     #DataPrepare(filepath).test()
+
+
 
 if __name__ == '__main__':
     main()

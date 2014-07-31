@@ -13,7 +13,7 @@ MyAppServices.service('DataService',['$http',function($http){
 	this.all_types = [];
 
 	this.loadData = function(callback){
-		$http.get("json/data.json").success(function(data){
+		$http.get("json/newdata.json").success(function(data){
 			var parse_rcs = parseData(data);
 			that.all_data = parse_rcs[0];
 			that.all_types = parse_rcs[1]; //store all of type in system
@@ -43,7 +43,7 @@ MyAppServices.service('DataService',['$http',function($http){
 		var real_list = compositeList(this.all_data[data_type+"_real"],me_type);
 		var predict_list = compositeList(this.all_data[data_type+"_predict"],me_type);
 
-		return [predict_list,real_list];
+		return [predict_list.reverse(),real_list.reverse()];
 	}
 }]);
 

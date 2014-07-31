@@ -44,7 +44,51 @@
             <div class="tab-content">
               <div class="tab-pane active" id="recent">
                 <div id="recentChart" class="chart"></div>
+                <div >
+                  <div class="panel panel-default" style="max-width:640px;margin-top:15px;">
+                    <div class="title panel-morgan"></div>
+                    <div class="panel-body">
 
+                      <div class="input-container">
+
+                        <table class="table">
+                          <thead>
+                            <tr>
+                              <th></th>
+                              <th>Prediction</th>
+                              <th>Actual</th>
+                              <th>APE</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <th>ME-1</th>
+                              <th>{{recent_data[0]}}</th>
+                              <th></th>
+                              <th></th>
+                            </tr>
+                            <tr>
+                              <th>ME</th>
+                              <th>{{recent_data[1]}}</th>
+                              <th></th>
+                              <th></th>
+                            </tr>
+                            <tr>
+                              <th>ME+1</th>
+                              <th>{{recent_data[2]}}</th>
+                              <th></th>
+                              <th></th>
+                            </tr>
+
+                          </tbody>
+                        </table>
+
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
               </div>
               <div class="tab-pane" id="history">
                 <div id="historyChart" class="chart"></div>
@@ -95,6 +139,7 @@
             </div>
           </div>
         </div>
+
       </div>
 
     </div>
@@ -112,9 +157,7 @@
           <h4 class="modal-title" id="myModalLabel">Model Update</h4>
         </div>
         <div class="modal-body" style="height:200px;">
-          <div class="alert alert-warning" role="alert" ng-if="need_update"> 
-              Please update your model data file
-          </div>
+          <div class="alert alert-warning" role="alert" ng-if="need_update">Please update your model data file</div>
           <div class="col-md-11">
             <div class="input-group">
               <span class="input-group-addon">File</span>
@@ -122,14 +165,14 @@
             <div class="input-group" style="margin-top:15px;">
               <span class="input-group-addon">SheetName</span>
               <select name="sheetname" class="form-control">
-              <option value="D">1312</option>
-              <option value="A">3123</option>
-              <option value="C">3123</option>
-              <option value="B">321</option>
-            </select>
-           </div>
+                <option value="D">1312</option>
+                <option value="A">3123</option>
+                <option value="C">3123</option>
+                <option value="B">321</option>
+              </select>
+            </div>
           </div>
-            
+
           <div class="col-md-1"></div>
         </div>
         <div class="modal-footer">
