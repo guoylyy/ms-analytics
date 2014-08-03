@@ -17,7 +17,6 @@ def _next_year_month(year_month):
     dt = datetime.datetime(year=year_month[0],month=year_month[1],day=28) + datetime.timedelta(days=10)
     return (dt.year,dt.month)
 
-
 def _str2date(string):
     return datetime.datetime.strptime(string, '%m/%d/%Y')
 
@@ -665,34 +664,31 @@ class NewTest(object):
     def __init__(self):
         print '=====Start New Test'
 
-    def generate_beta(self, size, mu=0, sigma=1):
+    def generate_beta(self, value):
         beta = {}
         for i in Test.FF:
-            beta[i] = []
-            for j in range(0, size):
-                beta[i].append(random.normalvariate(mu, sigma))
-        #print beta
+            beta[i] = value
         return beta
 
-    def generate_p(self, size, mu=0, sigma=1):
+    def generate_p(self, size):
         p = {}
         for i in Test.FF:
             p[i] = [[0 for m in range(0, size)] for k in range(0, size)]
             for j in range(0, size):
-                p[i][j][j] = random.normalvariate(mu, sigma)
+                p[i][j][j] = 10E12
         return p
 
-    def run(self,data,months,me_facts):
+    def run(self, data, months, me_facts):
         #filepath = "uploads/data.csv"
         data = data
         beta = {
-            'tmem1': self.generate_beta(3),
-            'tmemean': self.generate_beta(3),
-            'tme': self.generate_beta(3),
-            'tmep1': self.generate_beta(4),
-            'mmem1': self.generate_beta(4),
-            'mme': self.generate_beta(2),
-            'mmep1': self.generate_beta(4),
+            'tmem1': self.generate_beta((49370077.5454166, 1.66201325669058, -0.794196017693839)),
+            'tmemean': self.generate_beta((50988154.8637934, 0.105872702335176, 0.665913079984654)),
+            'tme': self.generate_beta((-13320854.3748666, 0.945726197256682, 0.219576458342143)),
+            'tmep1': self.generate_beta((83978545.2053504, -0.435110948279625, 0.838320389298151, 0.0636830837785078)),
+            'mmem1':  self.generate_beta((28297083.9073604, 1.00506197736856, 0.250755185036312, -0.415048232195793)),
+            'mme': self.generate_beta((9947490.41767583, 0.697396219993049)),
+            'mmep1': self.generate_beta((38973762.3147386, -0.626437805324372, 0.284225953605474, 0.912630360528755)),
         }
         p = {
             'tmem1': self.generate_p(3),
@@ -704,6 +700,7 @@ class NewTest(object):
             'mmep1': self.generate_p(4),
         }
         months = months[4:]
+        #print months
         index = 0 
         final_list = []
         for year_month in months:
@@ -712,10 +709,11 @@ class NewTest(object):
             next_month = _next_year_month(year_month)
             print next_month
             result1 = Modeling().do_predict(beta, data, year_month)
+            
             for k in result1:
                 #print k
                 #print 'x:' + ' ' * 2 + str(result1[k]['x'])
-                print 'y:' + ' ' * 2 + str(result1[k]['y'])
+                #print 'y:' + ' ' * 2 + str(result1[k]['y'])
                 for key in result1[k]['y'].keys():
                     m = {}
                     m['year'] = next_month[0]
@@ -738,6 +736,7 @@ class NewTest(object):
             for k in result2:
                 beta[k] = result2[k]['beta']
                 p[k] = result2[k]['p']
+                #print 'ape: ' + ' ' + str(result2[k]['ape']) 
                 #print k
                 #print 'beta:' + ' ' * 2 + str(result2[k]['beta'])
                 #print 'p:' + ' ' * 2 + str(result2[k]['p'])        
@@ -746,7 +745,15 @@ class NewTest(object):
     
     def get_real(self,me_facts,year_month):
         key = "%s-%s" % year_month
-        y = {}
+        y = {            
+            'mme':None,
+            'tme':None,
+            'mmep1':None,
+            'tmep1':None,
+            'mmem1':None,
+            'tmem1':None,
+            'tmemean':None
+        }
         all_me = 0
         for f in me_facts[key]:
             all_me = all_me + f.trasaction
@@ -763,22 +770,10 @@ class NewTest(object):
         return y
 
 
-#def main():
-    #t = Test()
-    #t.test_model()
-    #tmem1 = t.test_tmem1()['x']
-    #tmemean = t.test_tmemean()['y']
-    #t.test_tme(tmemean)
-    #t.test_tmep1()
-    #t.test_mmem1(tmem1)
-    #mme = t.test_mme()['y']
-    #t.test_mmep1(mme)
-    #t.test_modeling()
-    
+def main():
     #tt = NewTest()
-    #tt.run()
-    #filepath = 'uploads/data.csv'
-    #DataPrepare(filepath).test()
+    #t.run()
+    pass
 
 
 
