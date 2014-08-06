@@ -2,19 +2,21 @@ import os
 import random
 import json
 import csv
+import simplejson as json
 from datetime import datetime,timedelta
 from flask import Flask, request, flash, url_for, redirect, \
      render_template, abort
 from flask_sqlalchemy import SQLAlchemy
+from flask.ext import restful
 from marshmallow import Serializer, fields, pprint
 from werkzeug import secure_filename
-from modeling_open import DataPrepare,NewTest
-
+from modeling import NewTest
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = set(['txt','csv'])
 app.config.from_pyfile('config.cfg')
 db = SQLAlchemy(app)
+api = restful.Api(app)
 
 def _str2date(string):
     return datetime.strptime(string, '%m/%d/%Y')
@@ -270,7 +272,7 @@ class ME(db.Model):
 
 @app.route('/')
 def show_index():
-	return redirect('/get_predict')
+	return render_template('index.html', msg='success')
 
 @app.route('/upload',methods=['GET', 'POST'])
 def upload_file():
@@ -298,14 +300,14 @@ def upload_file():
 				query.insert_from_map(dp.get_data_map())
 				#predict and save into database,do it every month
 
-				return render_template('index.html', msg='success')
+				return render_template('upload.html', msg='success')
 			except Exception, e:
 				print(e)
-				return render_template('index.html',  msg='Error happen')
+				return render_template('upload.html',  msg='Error happen')
 		else:
-			return render_template('index.html')
+			return render_template('upload.html')
 	else:
-		return render_template('index.html')
+		return render_template('upload.html')
 
 @app.route('/need_update')
 def need_update():
@@ -433,6 +435,8 @@ def make_real_json():
 	for key in keys:
 		memos = {}
 		trasaction = {}
+		if len(me_facts[key]) < 3: # swap if there exist
+			continue
 		for fact in me_facts[key]:
 			if fact.me == 'ME':
 				memos['me'] = fact.memos
@@ -447,6 +451,7 @@ def make_real_json():
 		trasaction['month'] = _print_year_month(key)
 		memos_values.append(memos)
 		trasaction_values.append(trasaction)
+	print '---length %s ----' % len(memos_values)
 	return (_get_data_map(memos_values,'memos',False),_get_data_map(trasaction_values,'transaction',False))
 
 def make_predict_json():
@@ -492,8 +497,16 @@ def update_me_table(filepath):
 	except Exception, e:
 		print(e)
 
+
+class PredictionData(restful.Resource):
+    def get(self):
+    	pjs =  make_predict_json()
+    	reals =  make_real_json()
+    	m = [pjs[0],pjs[1],reals[0],reals[1]]
+    	return m
+
+api.add_resource(PredictionData, '/predict_data')
+
 if __name__ == '__main__':
 	app.run()
-
-
-	
+	#predict()

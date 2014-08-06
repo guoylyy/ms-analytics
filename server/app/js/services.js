@@ -13,7 +13,10 @@ MyAppServices.service('DataService',['$http',function($http){
 	this.all_types = [];
 
 	this.loadData = function(callback){
-		$http.get("json/newdata.json").success(function(data){
+
+		$http.jsonp("http://localhost:5000/predict_data?callback=JSON_CALLBACK")
+		.success(function(data){
+			alert(data);
 			var parse_rcs = parseData(data);
 			that.all_data = parse_rcs[0];
 			that.all_types = parse_rcs[1]; //store all of type in system
@@ -23,7 +26,12 @@ MyAppServices.service('DataService',['$http',function($http){
 			}
 			that.month_list = getMonths(data);
 			callback();
-		});	
+		})
+		.error(function(data, status) {
+         	alert('Error Happen!');
+     	});	
+
+
 	}
 
 	this.getCurrentData = function(date_type,date_month){
