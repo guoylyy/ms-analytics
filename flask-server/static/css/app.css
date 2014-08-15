@@ -10,9 +10,24 @@ body {
 .topBar {
   width: 100%;
   height: 85px;
-  background-image: url(../img/logo.gif);
   background-repeat: no-repeat;
   background-color: #223e6e;
+}
+.logo_panel{
+  width: 380px;
+  color: white;
+  padding-left: 30px;
+  padding-top: 10px;
+  padding-right: 20px;
+  float: left;
+}
+.logo_panel .top_title{
+  font-size: 17px;
+  margin-bottom: -5px;
+  padding-left: 1px;
+}
+.logo_panel .second_title{
+  font-size: 30px;
 }
 .back_home{
   position: relative;

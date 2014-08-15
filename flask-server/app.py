@@ -10,11 +10,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask.ext import restful
 from marshmallow import Serializer, fields, pprint
 from werkzeug import secure_filename
-from modeling import NewTest
+from modeling import NewTest,DataPrepare
 
 app = Flask(__name__)
 ALLOWED_EXTENSIONS = set(['txt','csv'])
 app.config.from_pyfile('config.cfg')
+
 db = SQLAlchemy(app)
 api = restful.Api(app)
 
@@ -451,7 +452,6 @@ def make_real_json():
 		trasaction['month'] = _print_year_month(key)
 		memos_values.append(memos)
 		trasaction_values.append(trasaction)
-	print '---length %s ----' % len(memos_values)
 	return (_get_data_map(memos_values,'memos',False),_get_data_map(trasaction_values,'transaction',False))
 
 def make_predict_json():

@@ -10,7 +10,7 @@ body {
 .topBar {
 	width: 100%;
 	height: 85px;
-	background-image: url(../img/logo.gif);
+	background-image: url(../img/logo.png);
 	background-repeat: no-repeat;
 	background-color: #223e6e;
 }

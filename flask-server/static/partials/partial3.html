@@ -36,10 +36,10 @@
                 Current Prediction
               </a>
             </li>
-            <li role="presentation" class="active">
+            <li role="presentation">
               <a href="#history">Historical Trend</a>
             </li>
-            <li role="presentation">
+            <li role="presentation" class="active">
               <a href="#track">
                 <span class="badge pull-right"></span>
                 Predict Track
@@ -51,11 +51,13 @@
     </div>
 
     <div class="col-md-9">
-      <div class="title panel-morgan chart-panel-title">Historical Trend</div>
+      <div class="title panel-morgan chart-panel-title">Predict Track</div>
       <div class="panel panel-default">
         <div class="panel-body">
+
           <div class="tab-content">
             <div class="tab-pane" id="recent">
+
               <div id="recentChart" class="chart"></div>
 
             </div>
@@ -67,39 +69,30 @@
                 <label class="radio-inline">
                   <input type="radio" name="xmxtRadio" id="xtRadio" value="transaction" ng-model="current_data_src" ng-change="change_options()">Transaction</label>
               </div>
-              <div class="radio-container">
-                <label class="label label-info" style="padding:3px 15px 3px 16px;margin:0 10px 0 10px;">ME:</label>
-                <label class="radio-inline">
-                  <input type="radio" name="meRadio" id="xmRadio1" value="mem1" ng-model="current_data_me" ng-change="change_options()">ME-1</label>
-                <label class="radio-inline">
-                  <input type="radio" name="meRadio" id="xtRadio2" value="me" ng-model="current_data_me" ng-change="change_options()">ME</label>
-                <label class="radio-inline">
-                  <input type="radio" name="meRadio" id="xtRadio3" value="mep1" ng-model="current_data_me" ng-change="change_options()">ME+1</label>
-              </div>
-
               <div id="historyChart" class="chart"></div>
             </div>
+
             <div class="input-container">
 
-              <table class="table .table-bordered .table-condensed" >
+              <table class="table">
                 <thead>
                   <tr>
                     <th>ME</th>
-                    <th ng-repeat="m in months">{{m}}</th>
+                    <th ng-repeat="m in month_list">{{m}}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <th>Prediction</th>
-                    <th ng-repeat="r in results[0]">{{r}}</th>
+                    <th>ME-1</th>
+                    <th ng-repeat="r in apes[0]">{{r}}</th>
                   </tr>
                   <tr>
-                    <th>Actual</th>
-                    <th ng-repeat="r in results[1]">{{r}}</th>
+                    <th>ME</th>
+                    <th ng-repeat="r in apes[1]">{{r}}</th>
                   </tr>
                   <tr>
-                    <th>APE</th>
-                    <th ng-repeat="r in results[2]">{{r}}%</th>
+                    <th>ME+1</th>
+                    <th ng-repeat="r in apes[2]">{{r}}</th>
                   </tr>
 
                 </tbody>

@@ -1,10 +1,7 @@
 'use strict';
 
 /* Services */
-
-
-// Demonstrate how to register services
-// In this case it is a simple value service.
+var lastMonthSize = 10;
 var MyAppServices = angular.module('MyAppServices', []);
 
 MyAppServices.service('DataService',['$http',function($http){
@@ -30,13 +27,26 @@ MyAppServices.service('DataService',['$http',function($http){
 		.error(function(data, status) {
          	alert('Error Happen!');
      	});	
-
-
 	}
 
-	this.getCurrentData = function(date_type,date_month){
+
+	this.getLastestMonthList = function(){
+		if(that.month_list.length > lastMonthSize){
+			//Convert Month to Jan-2013 type
+			return that.month_list.slice(that.month_list.length - lastMonthSize);
+		}else{
+			return that.month_list;
+		}
+	}
+
+	this.getCurrentData = function(date_type,date_month,dt_type){
 		var values = this.all_data[date_type];
 		var rc = [];
+		if(dt_type == 'last_month'){
+			date_month = getLastMonth(date_month);
+		}else if (dt_type == 'last_year'){
+			date_month = getLastYearMonth(date_month);
+		}
 		for(var i=0;i<values.length;i++){
 			if(values[i].month == date_month.toString()){
 				var val = values[i];
@@ -55,6 +65,31 @@ MyAppServices.service('DataService',['$http',function($http){
 	}
 }]);
 
+function convertDate(dtStr){
+	var UTCMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+	var ym = dtStr.split("-");
+	return UTCMonth[Number(ym[1])-1] + ' ' + ym[0];
+}
+
+function getLastMonth(dtStr){
+	var ym = dtStr.split("-");
+	if(Number(ym[1])==1){
+		return Number(ym[0])-1 + '-12';
+	}else{
+		var m = Number(ym[1])-1;
+		if(m<10){
+			return ym[0] + '-0' + (Number(ym[1])-1);
+		}else{
+			return ym[0] + '-' + (Number(ym[1])-1);
+		}
+	}
+}
+
+function getLastYearMonth(dtStr){
+	var ym = dtStr.split("-");
+	return (Number(ym[0])-1) + '-' + ym[1];
+}
+
 function getMonths(all_datas){
 	var month_list = [];
 	if(all_datas.length>0){
@@ -71,9 +106,13 @@ function getMonths(all_datas){
 
 function compositeList(dicts,me_type){
 	var data_list = [];
-	for(var i=0;i<dicts.length;i++){
+	var limit = dicts.length;
+	if(dicts.length > lastMonthSize){
+		limit = lastMonthSize;
+	}
+	for(var i = 0;i<limit;i++){
 		var dict = dicts[i];
-		data_list.push(dict[me_type]);
+		data_list.push(Number(dict[me_type].toFixed(0)));
 	}
 	return data_list;
 }

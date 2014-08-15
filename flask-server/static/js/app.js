@@ -12,5 +12,6 @@ angular.module('myApp', [
 config(['$routeProvider', function($routeProvider) {
   $routeProvider.when('/main', {templateUrl: 'static/partials/partial1.html', controller: 'MainPageController'});
   $routeProvider.when('/history', {templateUrl: 'static/partials/partial2.html', controller: 'HistroyCtrl'});
+  $routeProvider.when('/track', {templateUrl: 'static/partials/partial3.html', controller: 'TrackCtrl'});
   $routeProvider.otherwise({redirectTo: '/main'});
 }]);

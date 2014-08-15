@@ -6,6 +6,7 @@
 
 import pickle
 import math
+import csv
 import random
 import datetime
 import calendar
@@ -813,6 +814,42 @@ class Test(object):
 
         for i in range(1, 12):
             run(i)
+
+
+
+class DataPrepare(object):
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.__loadfile()
+
+    def __loadfile(self):
+        reader = csv.reader(file(self.filepath, 'r'))
+        data_list = []
+        date_list = []
+        data_map = {}
+        for i in reader:
+            data = []
+            date_list.append(_str2date(i[0]))
+            data.append(i[0])
+            data.append(float(i[2]))
+            data.append(float(i[3]))
+            data_list.append(data)
+            data_map[i[0]] = i
+        self.data_list = data_list
+        self.date_list = sorted(date_list)
+        self.data_map = data_map
+        
+    def get_data(self):
+        return self.data_list
+
+    def get_data_map(self):
+        return self.data_map    
+
+    def get_start_date(self):
+        return self.date_list[0]
+
+    def get_end_date(self):
+        return self.date_list[len(self.date_list)-1]
 
 class NewTest(object):
     def __init__(self):
