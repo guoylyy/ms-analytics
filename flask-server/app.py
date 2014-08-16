@@ -310,6 +310,10 @@ def upload_file():
 	else:
 		return render_template('upload.html')
 
+
+
+
+
 @app.route('/need_update')
 def need_update():
 	"""Check if model need update or not

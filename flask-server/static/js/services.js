@@ -46,6 +46,8 @@ MyAppServices.service('DataService',['$http',function($http){
 			date_month = getLastMonth(date_month);
 		}else if (dt_type == 'last_year'){
 			date_month = getLastYearMonth(date_month);
+		}else if (dt_type == 'last_quarter'){
+			date_month = getLastQuarter(date_month);
 		}
 		for(var i=0;i<values.length;i++){
 			if(values[i].month == date_month.toString()){
@@ -77,11 +79,28 @@ function getLastMonth(dtStr){
 		return Number(ym[0])-1 + '-12';
 	}else{
 		var m = Number(ym[1])-1;
-		if(m<10){
-			return ym[0] + '-0' + (Number(ym[1])-1);
-		}else{
-			return ym[0] + '-' + (Number(ym[1])-1);
-		}
+		return joinYearMonth(ym[0], m);
+	}
+}
+
+function getLastQuarter(dtStr){
+	var ym = dtStr.split("-");
+	var year = Number(ym[0]);
+	var month = Number(ym[1]);
+	if(month > 3){
+		month = month - 3;
+	}else{
+		month = (month - 3) + 12;
+		year = year - 1;
+	}
+	return joinYearMonth(year, month);
+}
+
+function joinYearMonth(year, month){
+	if(month < 10){
+		return year + '-0' + (month-1);
+	}else{
+		return year + '-' + (month-1);
 	}
 }
 
@@ -89,6 +108,8 @@ function getLastYearMonth(dtStr){
 	var ym = dtStr.split("-");
 	return (Number(ym[0])-1) + '-' + ym[1];
 }
+
+
 
 function getMonths(all_datas){
 	var month_list = [];

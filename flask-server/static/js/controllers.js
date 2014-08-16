@@ -17,6 +17,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 	_scope.current_data_src = "memos";
 	_scope.current_tab = "recent";
 
+
 	DataService.loadData(function(){
         /*
             Initial Current Chart
@@ -28,17 +29,31 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         }else{
             _scope.need_update = true;
         }
+        /*
+            For table
+        */
+        var current_prediction = [];
+        current_prediction.push(convertListToMoney(DataService.getCurrentData("memos_predict",_scope.end_month)));
+        current_prediction.push(convertListToMoney(DataService.getCurrentData("transaction_predict",_scope.end_month)));
+        _scope.current_prediction = current_prediction;
+
+        /*
+            For Charts
+        */
         var title = 'Month End Projection Of ' + view_tags[_scope.current_data_src];
 		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month);
         _scope.recent_chart = initialResentChart(_scope.recent_data,categories,_scope.end_month, title);
         _scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
         _scope.apes = calApes(_scope.recent_data,_scope.real_data);   
 
-        _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_month');
-        _scope.recent_chart.series[1].setData(_scope.lastM);
-
         _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_year');
-        _scope.recent_chart.series[0].setData(_scope.lastY);        
+        _scope.recent_chart.series[0].setData(_scope.lastY);
+
+        _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_quarter');
+        _scope.recent_chart.series[1].setData(_scope.lastY);  
+
+        _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_month');
+        _scope.recent_chart.series[2].setData(_scope.lastM);
 
 	});
 
@@ -82,8 +97,16 @@ MyAppController.controller('HistroyCtrl', ['$scope','DataService', function($sco
             var title = 'Historical Trend Of ' + view_tags[_scope.current_data_src] 
                     + ' ('+ view_tags[_scope.current_data_me]+')';
 			_scope.history_chart = initialHistoryChart(rc, month_list, month_list[0],_scope.end_month,title);
-            _scope.results = rc;
+            //_scope.results = rc;
             _scope.months = month_list;
+
+            var rts = [];
+            for(var i=0; i<2; i++){
+                rts.push(convertListToThousand(rc[i]));
+            }
+            rts.push(rc[2]);
+            _scope.results = rts;
+
 		}else{
 			alert("Fail to load Data!");
 		}
@@ -97,13 +120,20 @@ MyAppController.controller('HistroyCtrl', ['$scope','DataService', function($sco
 		}else{
 			alert("Fail to load Data!");
 		}
-        _scope.results = rc;
+        //_scope.results = rc;
 		_scope.history_chart.series[0].setData(rc[0]);
 		_scope.history_chart.series[1].setData(rc[1]);
 		_scope.history_chart.series[2].setData(rc[2]);
         var title = 'Historical Trend Of ' + view_tags[_scope.current_data_src] 
                     + ' ('+ view_tags[_scope.current_data_me]+')';
-        _scope.history_chart.setTitle({text: title});      
+        _scope.history_chart.setTitle({text: title});
+        var rts = [];
+            for(var i=0; i<2; i++){
+                rts.push(convertListToThousand(rc[i]));
+            }
+        rts.push(rc[2]);
+        _scope.results = rts;      
+
 	}
 
 }]);
@@ -209,7 +239,7 @@ function initialHistoryChart(data, categories, start_month, end_month, title){
                 title: {
                     text: ''
                 },
-                min:0,
+                min:2000000,
                 plotLines: [{
                     value: 0,
                     color: '#808080'
@@ -219,7 +249,7 @@ function initialHistoryChart(data, categories, start_month, end_month, title){
                 title: {
                     text: 'APE%'
                 },
-                max:100,
+                max:30,
                 min:0,
                 plotLines: [{
                     value: 0,
@@ -279,18 +309,6 @@ function initialResentChart(data,categories,end_month, title){
                     value: 0,
                     color: '#808080'
                 }]
-                },
-                {
-                title: {
-                    text: 'APE%'
-                },
-                max:100,
-                min:0,
-                plotLines: [{
-                    value: 0,
-                    color: '#808080'
-                }],
-                opposite: true  
                 }
             ],
             legend: {
@@ -310,6 +328,11 @@ function initialResentChart(data,categories,end_month, title){
             series: [     
              {
                 name: 'Last Year',
+                data: [],
+                type: 'column'
+             },
+             {
+                name: 'Last Quarter',
                 data: [],
                 type: 'column'
              },
@@ -350,7 +373,7 @@ function initialTrackChart(data,categories,start_month,end_month,title){
                 title: {
                     text: 'APE%'
                 },
-                max:100,
+                max:30,
                 min:0,
                 plotLines: [{
                     value: 0,
@@ -408,6 +431,37 @@ function IsNum(num){
   	return(reNum.test(num));
   }
 }
+
+function convertListToThousand(mList){
+    var result = [];
+    for(var i in mList){
+        result.push((mList[i]/1000).toFixed(1) + "");
+    }
+    return result;
+}
+
+function convertListToMoney(mList){
+    var result = [];
+    for(var i in mList){
+        result.push(fmoney(mList[i].toFixed(0),0));
+    }
+    return result;
+}
+
+
+function fmoney(s, n)  
+{  
+   n = n > 0 && n <= 20 ? n : 2;  
+   s = parseFloat((s + "").replace(/[^\d\.-]/g, "")).toFixed(n) + "";  
+   var l = s.split(".")[0].split("").reverse(),  
+   r = s.split(".")[1];  
+   var t = "";  
+   for(var i = 0; i < l.length; i ++ )  
+   {  
+      t += l[i] + ((i + 1) % 3 == 0 && (i + 1) != l.length ? "," : "");  
+   }  
+   return t.split("").reverse().join("") ;  
+} 
 
 
 Date.prototype.format =function(format)

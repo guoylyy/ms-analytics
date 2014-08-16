@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container" style="width:1280px">
   <div class="topBar">
     <div class="logo_panel">
       <p class="top_title">
@@ -19,7 +19,7 @@
   </div>
 </div>
 
-<div class="container" style="margin-top: 30px;">
+<div class="container" style="margin-top: 30px; width:1280px;">
   <div class="row">
     <div class="col-md-3">
       <div class="panel panel-default panel-morgan">
@@ -61,14 +61,16 @@
             </div>
             <div class="tab-pane active" id="history">
               <div class="radio-container">
-                <label class="label label-info" style="padding:3px 10px 3px 10px;margin:0 10px 0 10px;">From:</label>
+                <!-- <label class="label label-info" style="padding:3px 10px 3px 10px;margin:0 10px 0 10px;">From:</label> -->
+                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label class="radio-inline">
                   <input type="radio" name="xmxtRadio" id="xmRadio" value="memos" ng-model="current_data_src" ng-change="change_options()">Memos</label>
                 <label class="radio-inline">
                   <input type="radio" name="xmxtRadio" id="xtRadio" value="transaction" ng-model="current_data_src" ng-change="change_options()">Transaction</label>
               </div>
               <div class="radio-container">
-                <label class="label label-info" style="padding:3px 15px 3px 16px;margin:0 10px 0 10px;">ME:</label>
+                <!-- <label class="label label-info" style="padding:3px 15px 3px 16px;margin:0 10px 0 10px;">ME:</label> -->
+                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <label class="radio-inline">
                   <input type="radio" name="meRadio" id="xmRadio1" value="mem1" ng-model="current_data_me" ng-change="change_options()">ME-1</label>
                 <label class="radio-inline">
@@ -90,16 +92,16 @@
                 </thead>
                 <tbody>
                   <tr>
-                    <th>Prediction</th>
+                    <th>Prediction(K)</th>
                     <th ng-repeat="r in results[0]">{{r}}</th>
                   </tr>
                   <tr>
-                    <th>Actual</th>
+                    <th>Actual(K)</th>
                     <th ng-repeat="r in results[1]">{{r}}</th>
                   </tr>
                   <tr>
-                    <th>APE</th>
-                    <th ng-repeat="r in results[2]">{{r}}%</th>
+                    <th>APE(%)</th>
+                    <th ng-repeat="r in results[2]">{{r}}</th>
                   </tr>
 
                 </tbody>
