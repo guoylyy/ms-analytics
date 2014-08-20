@@ -24,6 +24,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         */
 		_scope.start_month = DataService.start_month;
 		_scope.end_month = DataService.end_month;
+        _scope.need_update = true;
         if(_scope.current_month.toString() == _scope.end_month){
 		    _scope.need_update = false;
         }else{
@@ -32,6 +33,8 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         /*
             For table
         */
+        _scope.me_dates = DataService.getYeatMonthME(DataService.end_month);
+        
         var current_prediction = [];
         current_prediction.push(convertListToMoney(DataService.getCurrentData("memos_predict",_scope.end_month)));
         current_prediction.push(convertListToMoney(DataService.getCurrentData("transaction_predict",_scope.end_month)));
@@ -107,7 +110,23 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 
     _scope.update = function(target){
         if($("#filename").val().length>0 && $("#sheetname").val().length >0){
-            $("#update-form").submit();
+            var form_data = $("#update-form").serialize();
+            $.ajax({
+                url:'/update',
+                type: 'POST',
+                data: form_data,
+                success: function(data){
+                    if(data == 'success'){
+                        alert("Success update model!");
+                        window.location.reload();
+                    }else{
+                        alert(data);
+                    }
+                },
+                fail: function(e){
+                    alert("fail");
+                }
+            });
         }else{
             alert("Please choose data file to update model!");
         }

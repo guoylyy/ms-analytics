@@ -12,8 +12,10 @@ MyAppServices.service('DataService',['$http',function($http){
 	this.loadData = function(callback){
 
 		$http.get("http://localhost:5000/predict_data")
-		.success(function(data){
+		.success(function(d){
 			//alert(data);
+			var data = d.predictions;
+			that.mes = d.mes;
 			var parse_rcs = parseData(data);
 			that.all_data = parse_rcs[0];
 			that.all_types = parse_rcs[1]; //store all of type in system
@@ -26,9 +28,9 @@ MyAppServices.service('DataService',['$http',function($http){
 		})
 		.error(function(data, status) {
          	alert('Error Happen!');
+         	callback();
      	});	
 	}
-
 
 	this.getLastestMonthList = function(){
 		if(that.month_list.length > lastMonthSize){
@@ -58,6 +60,16 @@ MyAppServices.service('DataService',['$http',function($http){
 			}
 		}
 		return rc;
+	}
+
+	this.getYeatMonthME = function(yearmonth){
+		var mes = ['ME-1','ME','ME+1'];
+		var results = [];
+		for(var i in mes){
+			var key = yearmonth + '-' + mes[i];
+			results.push(that.mes[key]);
+		}
+		return results;
 	}
 
 	this.getHistoryData = function(data_type,me_type){

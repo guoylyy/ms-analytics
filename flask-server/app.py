@@ -8,6 +8,7 @@ from datetime import datetime,timedelta
 from flask import Flask, request, flash, url_for, redirect, \
      render_template, abort
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import or_ 
 from flask.ext import restful
 from marshmallow import Serializer, fields, pprint
 from werkzeug import secure_filename
@@ -19,7 +20,6 @@ app.config.from_pyfile('config.cfg')
 
 db = SQLAlchemy(app)
 api = restful.Api(app)
-
 
 """
 	=================================================================
@@ -106,8 +106,8 @@ def update():
 	mes = sheet.col_values(col_index[1])
 	memos = sheet.col_values(col_index[2])
 	transactions = sheet.col_values(col_index[3])
-	facts = [Fact(_str2date(dates[i]),mes[i],memos[i],transactions[i]) for i in range(1,len(dates))]
 	
+	facts = [Fact(_str2date(dates[i]),mes[i],memos[i],transactions[i]) for i in range(1,len(dates))]
 	mes = [ME(_str2date(dates[i]),mes[i]) for i in range(1,len(dates))]
 
 	# update me
@@ -116,10 +116,11 @@ def update():
 	
 	#update data
 	fq = FactQuery()
-	fq.insert_from_facts(facts)
+	insert_fact_count = fq.insert_from_facts(facts)
 
 	# run prediction process	
-	predict()
+	if insert_fact_count > 0:
+		predict()
 	return render_template('json.html',msg="success"
 		)
 
@@ -160,20 +161,25 @@ class PredictionData(restful.Resource):
     	pjs =  make_predict_json()
     	reals =  make_real_json()
     	m = [pjs[0],pjs[1],reals[0],reals[1]]
-    	return m
+    	mes =  MeQuery().get_all_me()
+    	return {"mes" : mes, "predictions" : m}
 
 class PreUpload(restful.Resource):
 	def get(self, listStr, filename, realname):
 		strs = listStr.split(',')
 		return [strs, filename, realname]
 
+class MEsApi(restful.Resource):
+	def get(self):
+		return MeQuery().get_all_me()
+
 api.add_resource(PredictionData, '/predict_data')
+api.add_resource(MEsApi, '/mes')
 api.add_resource(PreUpload, '/pre_upload_data/<string:listStr>/<string:filename>/<string:realname>')
 
 """
 	End of routes
 """
-
 
 """
 	=============================================
@@ -254,12 +260,14 @@ class FactQuery(object):
 
 	def insert_from_facts(self, facts):
 		db_fact_keys = self.fact_date_keys
+		count = 0
 		for fact in facts:
-			if fact.datetime not in db_fact_keys:
+			if fact.datetime not in db_fact_keys and fact.memos != '' and fact.trasaction != '':
 				db.session.add(fact)
+				count = count + 1
 		flag = db.session.commit()
 		self.load()
-		return flag
+		return count
 
 	def get_data(self):
 		return self.fact_list
@@ -281,6 +289,19 @@ class MeQuery(object):
 				count = count + 1
 		db.session.commit()
 		print "count%d" %count
+
+	def get_all_me(self):
+		mes = ME.query.filter(or_( ME.me=='ME',\
+								   ME.me == 'ME-1',\
+							       ME.me == 'ME+1'))
+		dt_map = {}
+		for me in mes:
+			tmp_dtstr = _date2str(me.datetime)
+			if me.me == 'ME+1':
+				me.datetime = me.datetime - timedelta(days=10)
+			key = '%s-%02d-%s' %(me.datetime.year, me.datetime.month, me.me)
+			dt_map[key] = tmp_dtstr
+		return dt_map
 
 
 class MediaParamterQuery(object):
@@ -559,3 +580,4 @@ def _allowed_file(filename):
 if __name__ == '__main__':
 	app.run()
 	#predict()
+	#MeQuery().get_all_me()
