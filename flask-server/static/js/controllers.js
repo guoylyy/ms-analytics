@@ -43,14 +43,14 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         var title = 'Month End Projection Of ' + view_tags[_scope.current_data_src];
 		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month);
         _scope.recent_chart = initialResentChart(_scope.recent_data,categories,_scope.end_month, title);
-        _scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
-        _scope.apes = calApes(_scope.recent_data,_scope.real_data);   
+        //_scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
+        //_scope.apes = calApes(_scope.recent_data,_scope.real_data);   
 
         _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_year');
         _scope.recent_chart.series[0].setData(_scope.lastY);
 
-        _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_quarter');
-        _scope.recent_chart.series[1].setData(_scope.lastY);  
+        _scope.lastQ = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_quarter');
+        _scope.recent_chart.series[1].setData(_scope.lastQ);  
 
         _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_month');
         _scope.recent_chart.series[2].setData(_scope.lastM);
@@ -59,19 +59,59 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 
 	_scope.change_options = function(target){
 		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+'_predict',_scope.end_month);
-        _scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
-        _scope.apes = calApes(_scope.recent_data, _scope.real_data);
+        //_scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
+        //_scope.apes = calApes(_scope.recent_data, _scope.real_data);
 
-        _scope.recent_chart.series[2].setData(_scope.recent_data);
+        _scope.recent_chart.series[3].setData(_scope.recent_data);
 
         _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_month');
-        _scope.recent_chart.series[1].setData(_scope.lastM);
+        _scope.recent_chart.series[0].setData(_scope.lastM);
+
+         _scope.lastQ = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_quarter');
+        _scope.recent_chart.series[1].setData(_scope.lastQ);  
 
         _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_year');
-        _scope.recent_chart.series[0].setData(_scope.lastY);   
+        _scope.recent_chart.series[2].setData(_scope.lastY);
+
         var title = 'Month End Projection Of ' + view_tags[_scope.current_data_src];
         _scope.recent_chart.setTitle({text: title});   
 	}
+    _scope.sheet_items = ['aa']
+    $("#file").fileupload({
+        add:function(e,data){
+             if(data.files[0].size > 100000000) {
+                 $("#upload-result").text("File is too large!");
+             }else{
+                 data.submit();
+             }
+        },
+        done:function(e,result){
+
+            var results = result.result[0];
+            for(var i=0; i<results.length;i++){
+                var value = results[i];
+                var html = "<option value=\"" + value + "\">" + value + "</option>";
+                $("#sheetname").append(html);
+            }
+            $("#upload_bar").val(result.result[2]);
+            $("#filename").val(result.result[1]);
+        },
+        fail:function(e,data){
+            alert("fail");
+        }
+    });
+
+    $("#upload_bar").click(function(){
+        $("#file").click();
+    });
+
+    _scope.update = function(target){
+        if($("#filename").val().length>0 && $("#sheetname").val().length >0){
+            $("#update-form").submit();
+        }else{
+            alert("Please choose data file to update model!");
+        }
+    }
 }]);
   
 /*
@@ -97,7 +137,6 @@ MyAppController.controller('HistroyCtrl', ['$scope','DataService', function($sco
             var title = 'Historical Trend Of ' + view_tags[_scope.current_data_src] 
                     + ' ('+ view_tags[_scope.current_data_me]+')';
 			_scope.history_chart = initialHistoryChart(rc, month_list, month_list[0],_scope.end_month,title);
-            //_scope.results = rc;
             _scope.months = month_list;
 
             var rts = [];

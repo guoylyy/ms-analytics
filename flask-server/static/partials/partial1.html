@@ -1,12 +1,8 @@
 <div class="container" style="width:1280px">
   <div class="topBar">
     <div class="logo_panel">
-      <p class="top_title">
-        MSWM
-      </p>
-      <p class="second_title">
-        Month End Prediction
-      </p>
+      <p class="top_title">MSWM</p>
+      <p class="second_title">Month End Prediction</p>
     </div>
     <div class="date-container" style="color:white;float:left;padding-top:43px;">
       <span>
@@ -64,69 +60,70 @@
       <div class="panel panel-default ">
         <div class="panel-body">
 
-      <div class="tab-content">
-        <div class="tab-pane active" id="recent">
+          <div class="tab-content">
+            <div class="tab-pane active" id="recent">
 
-         <div class="radio-container">
-                <!-- <label class="label label-info" style="padding:3px 10px 3px 10px;margin:0 10px 0 10px;">From:</label> -->
+              <div class="radio-container">
+                <!-- <label class="label label-info" style="padding:3px 10px 3px 10px;margin:0 10px 0 10px;">From:</label>
+              -->
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <label class="radio-inline">
-                  <input type="radio" name="xmxtRadio" id="xmRadio" value="memos" ng-model="current_data_src" ng-change="change_options()">Memos</label>
-                <label class="radio-inline">
-                  <input type="radio" name="xmxtRadio" id="xtRadio" value="transaction" ng-model="current_data_src" ng-change="change_options()">Transaction</label>
-              </div>
-          <div id="recentChart" class="chart"></div>
-          <div>
-            <div class="panel panel-default" style="max-width:640px;margin-top:15px;margin-left:15px;">
-              <div class="title panel-morgan"></div>
-              <div class="panel-body">
+              <label class="radio-inline">
+                <input type="radio" name="xmxtRadio" id="xmRadio" value="memos" ng-model="current_data_src" ng-change="change_options()">Memos</label>
+              <label class="radio-inline">
+                <input type="radio" name="xmxtRadio" id="xtRadio" value="transaction" ng-model="current_data_src" ng-change="change_options()">Transaction</label>
+            </div>
+            <div id="recentChart" class="chart"></div>
+            <div>
+              <div class="panel panel-default" style="max-width:640px;margin-top:15px;margin-left:15px;">
+                <div class="title panel-morgan"></div>
+                <div class="panel-body">
 
-                <div class="input-container">
+                  <div class="input-container">
 
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>ME</th>
-                        <th>Memos</th>
-                        <th>Transaction</th>
-                        
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th>ME-1</th>
-                        <th>{{current_prediction[0][0]}}</th>
-                        <th>{{current_prediction[1][0]}}</th>
-                      </tr>
-                      <tr>
-                        <th>ME</th>
-                        <th>{{current_prediction[0][1]}}</th>
-                        <th>{{current_prediction[1][1]}}</th>
-                      </tr>
-                      <tr>
-                        <th>ME+1</th>
-                        <th>{{current_prediction[0][2]}}</th>
-                        <th>{{current_prediction[1][2]}}</th>
-                      </tr>
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>ME</th>
+                          <th>Memos</th>
+                          <th>Transaction</th>
 
-                    </tbody>
-                  </table>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th>ME-1</th>
+                          <th>{{current_prediction[0][0]}}</th>
+                          <th>{{current_prediction[1][0]}}</th>
+                        </tr>
+                        <tr>
+                          <th>ME</th>
+                          <th>{{current_prediction[0][1]}}</th>
+                          <th>{{current_prediction[1][1]}}</th>
+                        </tr>
+                        <tr>
+                          <th>ME+1</th>
+                          <th>{{current_prediction[0][2]}}</th>
+                          <th>{{current_prediction[1][2]}}</th>
+                        </tr>
+
+                      </tbody>
+                    </table>
+
+                  </div>
 
                 </div>
-
               </div>
-            </div>
 
+            </div>
+          </div>
+          <div class="tab-pane" id="history">
+            <div id="historyChart" class="chart"></div>
           </div>
         </div>
-        <div class="tab-pane" id="history">
-          <div id="historyChart" class="chart"></div>
-        </div>
-      </div>
 
+      </div>
     </div>
   </div>
-</div>
 
 </div>
 </div>
@@ -134,37 +131,41 @@
 <!-- Modal -->
 <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 <div class="modal-dialog">
-<div class="modal-content">
-<div class="modal-header">
-  <button type="button" class="close" data-dismiss="modal">
-    <span aria-hidden="true">&times;</span>
-    <span class="sr-only">Close</span>
-  </button>
-  <h4 class="modal-title" id="myModalLabel">Model Update</h4>
-</div>
-<div class="modal-body" style="height:200px;">
-  <div class="alert alert-warning" role="alert" ng-if="need_update">Please update your model data file</div>
-  <div class="col-md-11">
-    <div class="input-group">
-      <span class="input-group-addon">File</span>
-      <input type="file" class="form-control"  style="display:inline;"></div>
-    <div class="input-group" style="margin-top:15px;">
-      <span class="input-group-addon">SheetName</span>
-      <select name="sheetname" class="form-control">
-        <option value="D">1312</option>
-        <option value="A">3123</option>
-        <option value="C">3123</option>
-        <option value="B">321</option>
-      </select>
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">
+        <span aria-hidden="true">&times;</span>
+        <span class="sr-only">Close</span>
+      </button>
+      <h4 class="modal-title" id="myModalLabel">Model Update</h4>
+    </div>
+    <div class="modal-body" style="height:200px;">
+      <div class="alert alert-warning" role="alert" ng-if="need_update">Please update your model data file</div>
+      <div class="col-md-11">
+        <div class="input-group">
+          <span class="input-group-addon">File</span>
+          <input type="text" readonly="true" class="form-control" placeholder="Click to upload file" id="upload_bar"/>
+          <input type="file" id="file" name="file"  data-url="pre_upload" style="display:none;" />
+        </div>
+        <form action="/update" method="post" id="update-form">
+          <div class="input-group" style="margin-top:15px;">
+            <span class="input-group-addon">SheetName</span>
+            <select name="sheetname" class="form-control" id="sheetname"></select>
+            <input type="text" name="filename" style="display:none;" id="filename"></div>
+        </form>
+      </div>
+
+      <div class="col-md-1"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      <button type="button" class="btn btn-primary" id="submit" ng-click="update()">Update</button>
     </div>
   </div>
+</div>
+</div>
 
-  <div class="col-md-1"></div>
-</div>
-<div class="modal-footer">
-  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-  <button type="button" class="btn btn-primary" id="submit" ng-click="update()">Update</button>
-</div>
-</div>
-</div>
-</div>
+<script type="text/javascript" src="static/bower_components/libs/jquery.ui.widget.js"></script>
+<script type="text/javascript" src="static/bower_components/libs/jquery.iframe-transport.js"></script>
+<script type="text/javascript" src="static/bower_components/libs/jquery.fileupload.js"></script>
+<script type="text/javascript" src="static/js/pages/partial1.js"></script>

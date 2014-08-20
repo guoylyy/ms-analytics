@@ -895,7 +895,7 @@ class NewTest(object):
         index = 0 
         final_list = []
         for year_month in months:
-            index = index + 1
+            
             print "%s-%s" %(year_month)
             next_month = _next_year_month(year_month)
             print next_month
@@ -909,14 +909,14 @@ class NewTest(object):
                     continue
                 for key in result1[k]['y'].keys():
                     m = {}
-                    m['year'] = next_month[0]
-                    m['month'] = next_month[1]
+                    m['year'] = year_month[0]
+                    m['month'] = year_month[1]
                     m['model_type'] = k
                     m['value'] = (float)("%0.2f"%result1[k]['y'][key])
                     m['ff'] = key
                     final_list.append(m)
 
-            if(index==len(months)):
+            if(index==len(months)-1):
                 break
             x, y_pred, y = {}, {}, {}
             for i in result1.keys():
@@ -934,6 +934,8 @@ class NewTest(object):
                 #print 'beta:' + ' ' * 2 + str(result2[k]['beta'])
                 #print 'p:' + ' ' * 2 + str(result2[k]['p'])        
             print '==========='
+            index = index + 1
+
         return final_list
     
     def get_real(self,me_facts,year_month):

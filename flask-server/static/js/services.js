@@ -33,13 +33,14 @@ MyAppServices.service('DataService',['$http',function($http){
 	this.getLastestMonthList = function(){
 		if(that.month_list.length > lastMonthSize){
 			//Convert Month to Jan-2013 type
-			return that.month_list.slice(that.month_list.length - lastMonthSize);
+			var list = that.month_list.slice(0, that.month_list.length-1);
+			return list.slice(list.length - lastMonthSize);
 		}else{
 			return that.month_list;
 		}
 	}
 
-	this.getCurrentData = function(date_type,date_month,dt_type){
+	this.getCurrentData = function(date_type, date_month, dt_type){
 		var values = this.all_data[date_type];
 		var rc = [];
 		if(dt_type == 'last_month'){
@@ -60,8 +61,9 @@ MyAppServices.service('DataService',['$http',function($http){
 	}
 
 	this.getHistoryData = function(data_type,me_type){
+		var predict_datas = this.all_data[data_type+"_predict"].slice(1,this.all_data[data_type+"_predict"].length);
 		var real_list = compositeList(this.all_data[data_type+"_real"],me_type);
-		var predict_list = compositeList(this.all_data[data_type+"_predict"],me_type);
+		var predict_list = compositeList(predict_datas,me_type);
 
 		return [predict_list.reverse(),real_list.reverse()];
 	}

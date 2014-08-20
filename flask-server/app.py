@@ -2,6 +2,7 @@ import os
 import random
 import json
 import csv
+import xlrd as excel
 import simplejson as json
 from datetime import datetime,timedelta
 from flask import Flask, request, flash, url_for, redirect, \
@@ -13,48 +14,172 @@ from werkzeug import secure_filename
 from modeling import NewTest,DataPrepare
 
 app = Flask(__name__)
-ALLOWED_EXTENSIONS = set(['txt','csv'])
+ALLOWED_EXTENSIONS = set(['txt','csv','xls','xlsx'])
 app.config.from_pyfile('config.cfg')
 
 db = SQLAlchemy(app)
 api = restful.Api(app)
 
-def _str2date(string):
-    return datetime.strptime(string, '%m/%d/%Y')
 
-def _date2str(date):
-    return date.strftime('%m/%d/%Y')
+"""
+	=================================================================
+	*  Start of routes
+	=================================================================
+"""
+@app.route('/')
+def show_index():
+	return render_template('index.html', msg='success')
 
-def _get_data_map(dlist, dtype, is_predict):
-	m = {}
-	m['endMonth'] = dlist[0]['month']
-	m['startMonth'] = dlist[len(dlist)-1]['month']
-	m['isPredict'] = is_predict;
-	m['type'] = dtype
-	m['values'] = dlist
-	return m
-
-def _year_month_sort(year_months):
-	""" Sort a list of year_month 
-	Input:
-		['2014-6','2014-5'....]
-	Output:
-		A list of year_month str but sorted as time 
+@app.route('/upload',methods=['GET', 'POST'])
+def upload_file():
+	"""Upload lastest month data file and update models based on this file
+	input:
+		CSV file with trasaction and memos data
+	return:
+		html 
 	"""
-	date_list = []
-	for d in year_months:
-		l = d.split('-')
-		year,month = (int(l[0]),int(l[1]))
-		date_list.append(datetime(year=year, month=month, day=1))
-	date_list = sorted(date_list, reverse=True)
-	return [ str(x.year)+'-'+str(x.month) for x in date_list]
+	if request.method == 'POST':
+		f = request.files['file']
+		if f and _allowed_file(f.filename):
+			# Save file to upload folder
+			filename = secure_filename(f.filename)
+			prefix = datetime.now().strftime("%S-%M-%y-")
+			path = os.path.join(app.config['UPLOAD_FOLDER'], prefix + filename)
+			f.save(path)
+			nfile = File(prefix+filename, path)
+			db.session.add(nfile)
+			db.session.commit()
+			try:
+				# Parse uploaded file
+				query = FactQuery()
+				dp = DataPrepare(path)
+				query.insert_from_map(dp.get_data_map())
+				#predict and save into database,do it every month
 
-def _print_year_month(year_month):
-	l = year_month.split('-')
-	year,month = (int(l[0]),int(l[1]))
-	month = "%02d"%month
-	return str(year)+'-'+month
+				return render_template('upload.html', msg='success')
+			except Exception, e:
+				return render_template('upload.html',  msg='Error happen')
+		else:
+			return render_template('upload.html')
+	else:
+		return render_template('upload.html')
 
+@app.route('/pre_upload',methods=['GET', 'POST'])
+def pre_upload():
+	""" Upload excel file, write back file id and list of sheet names
+	"""
+	if request.method == 'POST':
+		f = request.files['file']
+		if f and _allowed_file(f.filename):
+			#print f.filename
+			# TO-DO: write a save file function
+			filename = secure_filename(f.filename)
+			prefix = datetime.now().strftime("%S-%M-%y-")
+			path = os.path.join(app.config['UPLOAD_FOLDER'], prefix + filename)
+			f.save(path)
+			nfile = File(prefix+filename, path)
+			db.session.add(nfile)
+			db.session.commit()
+
+			data = excel.open_workbook(path)
+			sheets = data.sheets()
+			names = [s.name for s in sheets]
+			return redirect('/pre_upload_data/'+",".join(names)+"/"+ prefix + filename+"/"+filename)
+		else:
+			return render_template('json.html',msg="None2")
+	else:
+		names = {'aa':'dsada','bb':'dsada'}
+		return render_template('json.html',msg=names)
+
+@app.route('/update', methods = ['POST'])
+def update():
+	"""Update me table for each year
+	"""
+	filename = request.form['filename']
+	sheetname = request.form['sheetname']
+	f = File.query.filter(File.name == filename).first()
+	# update me
+	workbook = excel.open_workbook(f.path)
+	sheet =workbook.sheet_by_name(sheetname)
+	col_index = [ 0, 1, 2, 3]
+	dates = sheet.col_values(col_index[0])
+	mes = sheet.col_values(col_index[1])
+	memos = sheet.col_values(col_index[2])
+	transactions = sheet.col_values(col_index[3])
+	facts = [Fact(_str2date(dates[i]),mes[i],memos[i],transactions[i]) for i in range(1,len(dates))]
+	
+	mes = [ME(_str2date(dates[i]),mes[i]) for i in range(1,len(dates))]
+
+	# update me
+	mq = MeQuery()
+	mq.insert_mes(mes)
+	
+	#update data
+	fq = FactQuery()
+	fq.insert_from_facts(facts)
+
+	# run prediction process	
+	predict()
+	return render_template('json.html',msg="success"
+		)
+
+
+@app.route('/need_update')
+def need_update():
+	"""Check if model need update or not
+	"""
+	pq = PredictionQuery()
+	year, month = pq.get_lastest_date()
+	# Get this month End date time
+	end_datetime = datetime(year=year, month=month, day=31)
+	now = datetime.now()
+	if now > end_datetime:
+		msg = "true"
+	else:
+		msg = "false"	
+	return render_template('json.html',msg=msg
+		)
+
+def init_dict_tables():
+	"""Initialize the values of dict table
+	"""
+	model_types = ['tmem1','tmemean','tme','tmep1','mmem1','mme','mmep1']
+	me_types = ['me-1','me','me+1']
+	ff = [0.95, 0.97, 0.99]
+	for model_name in model_types:
+		db.session.add(ModelType(model_name))
+	for me_name in me_types:
+		db.session.add(MeType(me_name))
+	for number in ff:
+		db.session.add(ForgetFact(number))
+	db.session.commit()
+
+
+class PredictionData(restful.Resource):
+    def get(self):
+    	pjs =  make_predict_json()
+    	reals =  make_real_json()
+    	m = [pjs[0],pjs[1],reals[0],reals[1]]
+    	return m
+
+class PreUpload(restful.Resource):
+	def get(self, listStr, filename, realname):
+		strs = listStr.split(',')
+		return [strs, filename, realname]
+
+api.add_resource(PredictionData, '/predict_data')
+api.add_resource(PreUpload, '/pre_upload_data/<string:listStr>/<string:filename>/<string:realname>')
+
+"""
+	End of routes
+"""
+
+
+"""
+	=============================================
+	*  Start of model query
+	=============================================
+"""
 class FactQuery(object):
 	""" Query methods about Fact object
 	"""
@@ -80,8 +205,10 @@ class FactQuery(object):
 			fact_list.append(data)
 			if f.me in self.mes:
 				dt = f.datetime
-				if f.me == 'ME-1' or f.me == 'ME':
-					dt = dt + timedelta(days=10)
+				#if f.me == 'ME-1' or f.me == 'ME':
+				#	dt = dt + timedelta(days=10)
+				if f.me == 'ME+1':
+					dt = dt - timedelta(days=10)
 				key = "%s-%s" % (dt.year,dt.month)
 				if key in me_facts.keys():
 					me_facts[key].append(f)
@@ -125,11 +252,36 @@ class FactQuery(object):
 		self.load()
 		return flag
 
+	def insert_from_facts(self, facts):
+		db_fact_keys = self.fact_date_keys
+		for fact in facts:
+			if fact.datetime not in db_fact_keys:
+				db.session.add(fact)
+		flag = db.session.commit()
+		self.load()
+		return flag
+
 	def get_data(self):
 		return self.fact_list
 
 	def get_period_data(self, froms, end):
 		pass
+
+class MeQuery(object):
+	def __init__(self):
+		pass
+
+	def insert_mes(self, mes):
+		all_me = ME.query.all()
+		dts = [m.datetime for m in all_me]
+		count = 0
+		for me in mes:
+			if me.datetime not in dts:
+				db.session.add(me)
+				count = count + 1
+		db.session.commit()
+		print "count%d" %count
+
 
 class MediaParamterQuery(object):
 	def __init__(self):
@@ -137,6 +289,7 @@ class MediaParamterQuery(object):
 
 	def get_mp(self, year_month):
 		return MediaParamter.query.filter(year=year_month[0], month=year_month[1])
+
 
 class PredictionQuery(object):
 	def __init__(self):
@@ -162,15 +315,25 @@ class PredictionQuery(object):
 		ym = self.date_list[0].split('-')
 		return (int(ym[0]), int(ym[1]))
 
+	def get_keys(self):
+		return [prd.get_key_str() for prd in Prediction.query.all()]
+
 	def get_predictions(self):
 		return self.predict_map
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+	def insert_from_results(self, results):
+		pass
 
 """
-	Model Definition
+	=============================================
+	*  End of model query
+	=============================================
+"""
+
+"""
+	================================
+	*  Model Definition
+	================================
 """
 class Fact(db.Model):
 	__tablename__ = 'fact'
@@ -202,6 +365,10 @@ class Prediction(db.Model):
 
 	def as_dict(self):
 		return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+	def get_key_str(self):
+		return "%s-%s-%s-%s" % (self.year, self.month, self.model_type, self.ff)
+
 
 class PredictionSerializer(Serializer):
 	year = fields.Integer()
@@ -271,160 +438,10 @@ class ME(db.Model):
 """
 
 
-@app.route('/')
-def show_index():
-	return render_template('index.html', msg='success')
-
-@app.route('/upload',methods=['GET', 'POST'])
-def upload_file():
-	"""Upload lastest month data file and update models based on this file
-	input:
-		CSV file with trasaction and memos data
-	return:
-		html 
-	"""
-	if request.method == 'POST':
-		f = request.files['file']
-		if f and allowed_file(f.filename):
-			# Save file to upload folder
-			filename = secure_filename(f.filename)
-			prefix = datetime.now().strftime("%S-%M-%y-")
-			path = os.path.join(app.config['UPLOAD_FOLDER'], prefix + filename)
-			f.save(path)
-			nfile = File(prefix+filename, path)
-			db.session.add(nfile)
-			db.session.commit()
-			try:
-				# Parse uploaded file
-				query = FactQuery()
-				dp = DataPrepare(path)
-				query.insert_from_map(dp.get_data_map())
-				#predict and save into database,do it every month
-
-				return render_template('upload.html', msg='success')
-			except Exception, e:
-				print(e)
-				return render_template('upload.html',  msg='Error happen')
-		else:
-			return render_template('upload.html')
-	else:
-		return render_template('upload.html')
-
-
-
-
-
-@app.route('/need_update')
-def need_update():
-	"""Check if model need update or not
-	"""
-	pq = PredictionQuery()
-	year, month = pq.get_lastest_date()
-	# Get this month End date time
-	end_datetime = datetime(year=year, month=month, day=31)
-	now = datetime.now()
-	if now > end_datetime:
-		msg = "true"
-	else:
-		msg = "false"	
-	return render_template('json.html',msg=msg
-		)
-
-@app.route('/get_predict')
-def predict_data():
-	"""Get all Predictions in database
-	return:
-		json
-	"""
-	pjs =  make_predict_json()
-	reals =  make_real_json()
-	m = [pjs[0],pjs[1],reals[0],reals[1]]
-	return render_template('json.html',msg=json.dumps(m)
-		)
-
-@app.route('/upload_me')
-def upload_me():
-	"""Update me table for each year
-	"""
-
-	return render_template('json.html',msg="success"
-		)
-
-def init_dict_tables():
-	"""Initialize the values of dict table
-	"""
-	model_types = ['tmem1','tmemean','tme','tmep1','mmem1','mme','mmep1']
-	me_types = ['me-1','me','me+1']
-	ff = [0.95, 0.97, 0.99]
-	for model_name in model_types:
-		db.session.add(ModelType(model_name))
-	for me_name in me_types:
-		db.session.add(MeType(me_name))
-	for number in ff:
-		db.session.add(ForgetFact(number))
-	db.session.commit()
-
-class InitialParameters(object):
-	"""Initalize Media Paramter of beginning time
-	"""
-	FF = [ 0.95, 0.97, 0.99 ]
-
-	def __init__(self, start_year, start_month):
-		self.start_year = start_year
-		self.start_month = start_month
-
-	def __generate_beta(self, size, mu=0, sigma=1):
-		beta = {}
-		for i in self.FF:
-			beta[i] = []
-			for j in range(0, size):
-				beta[i].append(random.normalvariate(mu, sigma))
-		return beta
-
-	def __generate_p(self, size, mu=0, sigma=1):
-		p = {}
-		for i in self.FF:
-			p[i] = [[0 for m in range(0, size)] for k in range(0, size)]
-			for j in range(0, size):
-				p[i][j][j] = random.normalvariate(mu, sigma)
-		return p
-
-	def __generate_mps(self):
-                mps = []
-                betas = {
-                    'tmem1': self.__generate_beta(3),
-                    'tmemean': self.__generate_beta(3),
-                    'tme': self.__generate_beta(3),
-                    'tmep1': self.__generate_beta(4),
-                    'mmem1': self.__generate_beta(4),
-                    'mme': self.__generate_beta(2),
-                    'mmep1': self.__generate_beta(4),
-                } # generate beta of each model
-                ps = {
-                    'tmem1': self.__generate_p(3),
-                    'tmemean': self.__generate_p(3),
-                    'tme': self.__generate_p(3),
-                    'tmep1': self.__generate_p(4),
-                    'mmem1': self.__generate_p(4),
-                    'mme': self.__generate_p(2),
-                    'mmep1': self.__generate_p(4),
-                } # generate p of each model
-                for ff in self.FF:
-                	for key in betas.keys():
-                		mps.append(MediaParamter(self.start_year, self.start_month,\
-                			key, str(betas[key]), str(ps[key]), ff))
-                return mps
-
-    	def run(self):
-    		for mp in self.__generate_mps():
-    			print mp.year
-    			db.session.add(mp)
-    		db.session.commit()
-
 def init_db():
 	db.create_all()
 	init_dict_tables()
-	InitialParameters(app.config['START_YEAR'], app.config['START_MONTH']).run()
+	#InitialParameters(app.config['START_YEAR'], app.config['START_MONTH']).run()
 
 def drop_db():
 	db.drop_all()
@@ -485,31 +502,59 @@ def predict():
 	fq = FactQuery()
 	nt = NewTest()
 	results = nt.run(fq.get_data(),fq.get_months(),fq.get_me_facts())
+	rq = PredictionQuery()
+	keys = rq.get_keys()
 	for p in results:
 		predict = Prediction(p['year'],p['month'],p['value'],p['model_type'],p['ff'])
-		db.session.add(predict)
-	db.session.commit()
-
-def update_me_table(filepath):
+		if predict.get_key_str() not in keys:
+			db.session.add(predict)
 	try:
-		reader = csv.reader(file(filepath),'r')
-		for i in reader:
-			date = _str2date(i[0])
-			me = i[1]
-			db.session.add(ME(date, me))
 		db.session.commit()
 	except Exception, e:
-		print(e)
+		print "Prediction insert error happen!"
+	
+
+def _str2date(string):
+    return datetime.strptime(string, '%m/%d/%Y')
+
+def _date2str(date):
+    return date.strftime('%m/%d/%Y')
+
+def _get_data_map(dlist, dtype, is_predict):
+	m = {}
+	m['endMonth'] = dlist[0]['month']
+	m['startMonth'] = dlist[len(dlist)-1]['month']
+	m['isPredict'] = is_predict;
+	m['type'] = dtype
+	m['values'] = dlist
+	return m
+
+def _year_month_sort(year_months):
+	""" Sort a list of year_month 
+	Input:
+		['2014-6','2014-5'....]
+	Output:
+		A list of year_month str but sorted as time 
+	"""
+	date_list = []
+	for d in year_months:
+		l = d.split('-')
+		year,month = (int(l[0]),int(l[1]))
+		date_list.append(datetime(year=year, month=month, day=1))
+	date_list = sorted(date_list, reverse=True)
+	return [ str(x.year)+'-'+str(x.month) for x in date_list]
+
+def _print_year_month(year_month):
+	l = year_month.split('-')
+	year,month = (int(l[0]),int(l[1]))
+	month = "%02d"%month
+	return str(year)+'-'+month
 
 
-class PredictionData(restful.Resource):
-    def get(self):
-    	pjs =  make_predict_json()
-    	reals =  make_real_json()
-    	m = [pjs[0],pjs[1],reals[0],reals[1]]
-    	return m
+def _allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-api.add_resource(PredictionData, '/predict_data')
 
 if __name__ == '__main__':
 	app.run()
