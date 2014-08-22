@@ -1,7 +1,22 @@
 'use strict';
 
 /* Services */
-var lastMonthSize = 10;
+
+
+/*
+ 	Set up the time span in historical charts.
+ 	Start with 2014-01.
+*/
+var lastMonthSize = 6;
+var nowadays = new Date();
+var size = (nowadays.getFullYear() - 2014) * 12 + nowadays.getMonth() - 1;
+if (size > 13){
+	lastMonthSize = 13;
+}else{
+	lastMonthSize = size;
+}
+
+
 var MyAppServices = angular.module('MyAppServices', []);
 
 MyAppServices.service('DataService',['$http',function($http){
@@ -70,6 +85,19 @@ MyAppServices.service('DataService',['$http',function($http){
 			results.push(that.mes[key]);
 		}
 		return results;
+	}
+
+	this.getYeatMonthMEM1 = function(yearmonth){
+		if(this.mes[yearmonth + '-ME-1'] != null || this.mes[yearmonth + '-ME-1'] != undefined){
+			var dmy = that.mes[yearmonth + '-ME-1'].split('/');
+			var d = new Date();
+			d.setFullYear(Number(dmy[2]));
+			d.setMonth(Number(dmy[0]-1));
+			d.setDate(Number(dmy[1]));
+			return d;
+		}else{
+			return null;
+		}
 	}
 
 	this.getHistoryData = function(data_type,me_type){

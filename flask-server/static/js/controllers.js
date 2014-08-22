@@ -13,11 +13,11 @@ var view_tags = {'memos':'Memos',
 MyAppController.controller('MainPageController', ['$scope','DataService',function($scope,DataService) {
 	var _scope = $scope;
 	var categories = ['ME-1','ME','ME+1'];
-	_scope.current_month = new Date().format("yyyy-MM");
+	_scope.current_date = new Date();
 	_scope.current_data_src = "memos";
 	_scope.current_tab = "recent";
 
-
+    
 	DataService.loadData(function(){
         /*
             Initial Current Chart
@@ -25,10 +25,12 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 		_scope.start_month = DataService.start_month;
 		_scope.end_month = DataService.end_month;
         _scope.need_update = true;
-        if(_scope.current_month.toString() == _scope.end_month){
-		    _scope.need_update = false;
+        var next_ym = nextYearMonth(_scope.end_month);
+        var ym = DataService.getYeatMonthMEM1(next_ym);
+        if(ym == null || _scope.current_date >= ym || DEBUG){
+		    _scope.need_update = true;
         }else{
-            _scope.need_update = true;
+            _scope.need_update = false;
         }
         /*
             For table
@@ -79,7 +81,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         var title = 'Month End Projection Of ' + view_tags[_scope.current_data_src];
         _scope.recent_chart.setTitle({text: title});   
 	}
-    _scope.sheet_items = ['aa']
+    
     $("#file").fileupload({
         add:function(e,data){
              if(data.files[0].size > 100000000) {
@@ -89,18 +91,22 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
              }
         },
         done:function(e,result){
-
-            var results = result.result[0];
-            for(var i=0; i<results.length;i++){
-                var value = results[i];
-                var html = "<option value=\"" + value + "\">" + value + "</option>";
-                $("#sheetname").append(html);
+            if (result.result[3] == 'success'){
+                var results = result.result[0];
+                $("#sheetname").html("");
+                for(var i=0; i<results.length;i++){
+                    var value = results[i];
+                    var html = "<option value=\"" + value + "\">" + value + "</option>";
+                    $("#sheetname").append(html);
+                }
+                $("#upload_bar").val(result.result[2]);
+                $("#filename").val(result.result[1]);
+            }else{
+                alert(result.result);
             }
-            $("#upload_bar").val(result.result[2]);
-            $("#filename").val(result.result[1]);
         },
         fail:function(e,data){
-            alert("fail");
+            alert("Upload file fail, please contact your system administrator!");
         }
     });
 
@@ -109,7 +115,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
     });
 
     _scope.update = function(target){
-        if($("#filename").val().length>0 && $("#sheetname").val().length >0){
+        if($("#filename").val().length > 0 && $("#sheetname").val().length > 0){
             var form_data = $("#update-form").serialize();
             $.ajax({
                 url:'/update',
@@ -506,6 +512,25 @@ function convertListToMoney(mList){
     return result;
 }
 
+function nextYearMonth(year_month){
+    var ym = year_month.split('-');
+    var month = Number(ym[1]);
+    month  = month + 1;
+    if(month > 12){
+        month = 1;
+        return _merge_ym(ym[0]+1, month);
+    }else{
+        return _merge_ym(ym[0], month);
+    }
+}
+
+function _merge_ym(year, month){
+    if(month >= 10){
+        return year + '-' + month;
+    }else{
+        return year + '-0' + month;
+    }
+}
 
 function fmoney(s, n)  
 {  

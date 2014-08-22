@@ -15,7 +15,7 @@ from werkzeug import secure_filename
 from modeling import NewTest,DataPrepare
 
 app = Flask(__name__)
-ALLOWED_EXTENSIONS = set(['txt','csv','xls','xlsx'])
+ALLOWED_EXTENSIONS = set(['xls','xlsx'])
 app.config.from_pyfile('config.cfg')
 
 db = SQLAlchemy(app)
@@ -86,60 +86,54 @@ def pre_upload():
 			names = [s.name for s in sheets]
 			return redirect('/pre_upload_data/'+",".join(names)+"/"+ prefix + filename+"/"+filename)
 		else:
-			return render_template('json.html',msg="None2")
+			return render_template('json.html',\
+				msg="File format is not allowed!\nOnly [ %s ] are supported." % ','.join(ALLOWED_EXTENSIONS))
 	else:
-		names = {'aa':'dsada','bb':'dsada'}
-		return render_template('json.html',msg=names)
+		return render_template('json.html',msg="Error Happen!") 
 
 @app.route('/update', methods = ['POST'])
 def update():
 	"""Update me table for each year
 	"""
-	filename = request.form['filename']
-	sheetname = request.form['sheetname']
-	f = File.query.filter(File.name == filename).first()
-	# update me
-	workbook = excel.open_workbook(f.path)
-	sheet =workbook.sheet_by_name(sheetname)
-	col_index = [ 0, 1, 2, 3]
-	dates = sheet.col_values(col_index[0])
-	mes = sheet.col_values(col_index[1])
-	memos = sheet.col_values(col_index[2])
-	transactions = sheet.col_values(col_index[3])
+	try:
+		COL_INDEX = [ 0, 1, 2, 3]
+
+		filename = request.form['filename']
+		sheetname = request.form['sheetname']
+		f = File.query.filter(File.name == filename).first()
+		# update me
+		workbook = excel.open_workbook(f.path)
+		sheet =workbook.sheet_by_name(sheetname)
+		dates = sheet.col_values(COL_INDEX[0])
+		mes = sheet.col_values(COL_INDEX[1])
+		memos = sheet.col_values(COL_INDEX[2])
+		transactions = sheet.col_values(COL_INDEX[3])
 	
-	facts = [Fact(_str2date(dates[i]),mes[i],memos[i],transactions[i]) for i in range(1,len(dates))]
-	mes = [ME(_str2date(dates[i]),mes[i]) for i in range(1,len(dates))]
+		facts = [Fact(_str2date(dates[i]),mes[i],memos[i],transactions[i]) for i in range(1,len(dates))]
+		mes = [ME(_str2date(dates[i]),mes[i]) for i in range(1,len(dates))]
 
-	# update me
-	mq = MeQuery()
-	mq.insert_mes(mes)
+		# update me
+		mq = MeQuery()
+		mq.insert_mes(mes)
 	
-	#update data
-	fq = FactQuery()
-	insert_fact_count = fq.insert_from_facts(facts)
+		#update data
+		fq = FactQuery()
+		insert_fact_count = fq.insert_from_facts(facts)
 
-	# run prediction process	
-	if insert_fact_count > 0:
-		predict()
-	return render_template('json.html',msg="success"
-		)
+		# run prediction process	
+		if insert_fact_count > 0:
+			predict()
+			return render_template('json.html',msg="success"
+				)
+		else:
+			return render_template('json.html',msg="Operation success, but no data update."
+				)
+	except Exception, e:
+		return render_template('json.html',msg=e
+			)
 
 
-@app.route('/need_update')
-def need_update():
-	"""Check if model need update or not
-	"""
-	pq = PredictionQuery()
-	year, month = pq.get_lastest_date()
-	# Get this month End date time
-	end_datetime = datetime(year=year, month=month, day=31)
-	now = datetime.now()
-	if now > end_datetime:
-		msg = "true"
-	else:
-		msg = "false"	
-	return render_template('json.html',msg=msg
-		)
+
 
 def init_dict_tables():
 	"""Initialize the values of dict table
@@ -167,7 +161,7 @@ class PredictionData(restful.Resource):
 class PreUpload(restful.Resource):
 	def get(self, listStr, filename, realname):
 		strs = listStr.split(',')
-		return [strs, filename, realname]
+		return [strs, filename, realname, 'success']
 
 class MEsApi(restful.Resource):
 	def get(self):

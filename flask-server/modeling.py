@@ -279,6 +279,7 @@ class Model(Maths):
             firstday = _str2date('%d/1/%d' % (t[i][1], t[i][0]))
             d = self._checkdata(firstday, data, False)
             mep1.append(dict(data)[d] if d else 0)
+        #print [i * 4.3 for i in mep1]
         if mep1 == [0, 0, 0]:
             raise Exception('Cannot calcualte intial pred.')
         # d(k), d(k-1)
@@ -288,11 +289,15 @@ class Model(Maths):
                 diff.append(0)
             else:
                 diff.append(mep1[i]-mep1[i+1])
+        #print [i*4.3 for i in diff]
         # p(k+1)
         if diff[1] == 0:
             pdiff = diff[0]
         else:
             pdiff = 0.3*diff[0] + 0.7*diff[1]
+        #print pdiff * 4.3
+        #print year_month
+        #print (mep1[0] + pdiff) * 4.3
         return mep1[0] + pdiff
         
 
@@ -328,7 +333,6 @@ class TMeModel(Model):
         ]
 
 class TMep1Model(Model):
-    
     def _x_cal(self, year_month, data, para=None):
         return [
             1,
@@ -652,6 +656,7 @@ class Test(object):
             rp = m.predict(beta[month-1], data, (2013, month))
             tmp = self.get_real(real_y, (2013, month+1))
             rr = m.revise(beta[month-1], p[month-1], rp['x'], rp['y'], tmp['tmep1'])
+            print month , rp['x']
             beta.append(rr['beta'])
             p.append(rr['p'])
             ape.append(rr['ape'])
@@ -896,13 +901,16 @@ class NewTest(object):
         final_list = []
         for year_month in months:
             
-            print "%s-%s" %(year_month)
+            #print "%s-%s" %(year_month)
             next_month = _next_year_month(year_month)
-            print next_month
+            #print next_month
             result1 = Modeling().do_predict(beta, data, year_month)
-            
+            print year_month
+            if result1['tmep1']['x']: 
+                print [i*4.3 for i in result1['tmep1']['x']] 
+            #print result1['tmep1']['y']
             for k in result1:
-                #print k
+                #print year_month,k
                 #print 'x:' + ' ' * 2 + str(result1[k]['x'])
                 #print 'y:' + ' ' * 2 + str(result1[k]['y'])
                 if result1[k]['y'] is None:
@@ -929,7 +937,7 @@ class NewTest(object):
             for k in result2:
                 beta[k] = result2[k]['beta']
                 p[k] = result2[k]['p']
-                print 'ape: ' + ' ' + str(result2[k]['ape']) 
+                #print 'ape: ' + ' ' + str(result2[k]['ape']) 
                 #print k
                 #print 'beta:' + ' ' * 2 + str(result2[k]['beta'])
                 #print 'p:' + ' ' * 2 + str(result2[k]['p'])        
