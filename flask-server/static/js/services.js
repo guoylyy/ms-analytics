@@ -1,20 +1,11 @@
 'use strict';
 
 /* Services */
-
-
 /*
  	Set up the time span in historical charts.
  	Start with 2014-01.
 */
-var lastMonthSize = 6;
-var nowadays = new Date();
-var size = (nowadays.getFullYear() - 2014) * 12 + nowadays.getMonth() - 1;
-if (size > 13){
-	lastMonthSize = 13;
-}else{
-	lastMonthSize = size;
-}
+var lastMonthSize = 13;
 
 
 var MyAppServices = angular.module('MyAppServices', []);
@@ -37,6 +28,12 @@ MyAppServices.service('DataService',['$http',function($http){
 			if(data.length>0){
 				that.end_month = data[0].endMonth;
 				that.start_month = data[0].startMonth;
+				//set up lastMonthSize
+				var ym = that.end_month.split('-');
+				var size = (Number(ym[0]) - 2014) * 12 + Number(ym[1]) - 1;
+				if(size < 13 && size > 0){
+					lastMonthSize = size;
+				}
 			}
 			that.month_list = getMonths(data);
 			callback();

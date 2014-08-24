@@ -63,10 +63,11 @@
               <div class="radio-container">
                 <!-- <label class="label label-info" style="padding:3px 10px 3px 10px;margin:0 10px 0 10px;">From:</label> -->
                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                 <label class="radio-inline">
+                  <input type="radio" name="xmxtRadio" id="xtRadio" value="transaction" ng-model="current_data_src" ng-change="change_options()">Transaction</label>
                 <label class="radio-inline">
                   <input type="radio" name="xmxtRadio" id="xmRadio" value="memos" ng-model="current_data_src" ng-change="change_options()">Memos</label>
-                <label class="radio-inline">
-                  <input type="radio" name="xmxtRadio" id="xtRadio" value="transaction" ng-model="current_data_src" ng-change="change_options()">Transaction</label>
+                
               </div>
               <div class="radio-container">
                 <!-- <label class="label label-info" style="padding:3px 15px 3px 16px;margin:0 10px 0 10px;">ME:</label> -->
@@ -87,7 +88,7 @@
                 <thead>
                   <tr>
                     <th>ME</th>
-                    <th ng-repeat="m in months">{{m}}</th>
+                    <th ng-repeat="m in months">{{m | month_cut}}</th>
                   </tr>
                 </thead>
                 <tbody>

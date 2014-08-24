@@ -14,7 +14,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
 	var _scope = $scope;
 	var categories = ['ME-1','ME','ME+1'];
 	_scope.current_date = new Date();
-	_scope.current_data_src = "memos";
+	_scope.current_data_src = "transaction";
 	_scope.current_tab = "recent";
 
     
@@ -27,6 +27,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         _scope.need_update = true;
         var next_ym = nextYearMonth(_scope.end_month);
         var ym = DataService.getYeatMonthMEM1(next_ym);
+        
         if(ym == null || _scope.current_date >= ym || DEBUG){
 		    _scope.need_update = true;
         }else{
@@ -45,7 +46,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         /*
             For Charts
         */
-        var title = 'Month End Projection Of ' + view_tags[_scope.current_data_src];
+        var title = 'Month End Prediction Of ' + view_tags[_scope.current_data_src];
 		_scope.recent_data =  DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month);
         _scope.recent_chart = initialResentChart(_scope.recent_data,categories,_scope.end_month, title);
         //_scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
@@ -78,7 +79,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_year');
         _scope.recent_chart.series[2].setData(_scope.lastY);
 
-        var title = 'Month End Projection Of ' + view_tags[_scope.current_data_src];
+        var title = 'Month End Prediction Of ' + view_tags[_scope.current_data_src];
         _scope.recent_chart.setTitle({text: title});   
 	}
     
@@ -146,7 +147,7 @@ MyAppController.controller('HistroyCtrl', ['$scope','DataService', function($sco
 	var _scope = $scope;
 	var categories = ['ME-1','ME','ME+1'];
 	_scope.current_month = new Date().format("yyyy-MM");
-	_scope.current_data_src = "memos";
+	_scope.current_data_src = "transaction";
 	_scope.current_data_me = "mem1";
 
 	_scope.current_tab = "recent";
@@ -210,7 +211,7 @@ MyAppController.controller('TrackCtrl', ['$scope','DataService', function($scope
     var _scope = $scope;
     var categories = ['ME-1','ME','ME+1'];
     _scope.current_month = new Date().format("yyyy-MM");
-    _scope.current_data_src = "memos";
+    _scope.current_data_src = "transaction";
 
     _scope.current_tab = "recent";
     DataService.loadData(function(){
@@ -330,7 +331,7 @@ function initialHistoryChart(data, categories, start_month, end_month, title){
             },
             series: [
            {
-                name: 'Projection',
+                name: 'Prediction',
                 data: data[0]
             },{
                 name: 'Actual',
@@ -405,7 +406,7 @@ function initialResentChart(data,categories,end_month, title){
                 data: [],
                 type: 'column'
              },{
-                name: 'Projection',
+                name: 'Prediction',
                 data: data,
                 type: 'column'
              }
@@ -499,7 +500,7 @@ function IsNum(num){
 function convertListToThousand(mList){
     var result = [];
     for(var i in mList){
-        result.push((mList[i]/1000).toFixed(1) + "");
+        result.push(fmoney((mList[i]/1000).toFixed(0),0));
     }
     return result;
 }
