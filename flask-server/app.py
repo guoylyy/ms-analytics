@@ -30,6 +30,16 @@ api = restful.Api(app)
 def show_index():
 	return render_template('index.html', msg='success')
 
+def rool_back(year, month):
+  	results = Prediction.query.filter(Prediction.year>=year,Prediction.month>=month).all()
+  	dt = _str2date(str(month)+"/1/"+str(year))
+  	fts = Fact.delete.filter(Fact.datetime>=dt)
+  	print(fts)
+  	#for f in fts:
+  	#	print f.datetime
+  	#print(dt)
+  	print(len(results))
+
 @app.route('/upload',methods=['GET', 'POST'])
 def upload_file():
 	"""Upload lastest month data file and update models based on this file
@@ -84,7 +94,11 @@ def pre_upload():
 			data = excel.open_workbook(path)
 			sheets = data.sheets()
 			names = [s.name for s in sheets]
-			return redirect('/pre_upload_data/'+",".join(names)+"/"+ prefix + filename+"/"+filename)
+			ns = "\",\"".join(names)
+			msg = '[[\"'+ns+'\"],\"'+prefix+filename+'\",\"'+filename+'\",\"success\"]'
+			#print msg
+			return render_template('json.html',msg=msg) 
+			#return redirect('/pre_upload_data/'+",".join(names)+"/"+ prefix + filename+"/"+filename)
 		else:
 			return render_template('json.html',\
 				msg="File format is not allowed!\nOnly [ %s ] are supported." % ','.join(ALLOWED_EXTENSIONS))
@@ -385,12 +399,6 @@ class Prediction(db.Model):
 		return "%s-%s-%s-%s" % (self.year, self.month, self.model_type, self.ff)
 
 
-class PredictionSerializer(Serializer):
-	year = fields.Integer()
-	month = fields.Integer()
-	model_type = fields.String()
-	value = fields.Float()
-	ff = fields.Float()
 
 class MediaParamter(db.Model):
 	__tablename__ = 'media_parameter'
@@ -573,5 +581,6 @@ def _allowed_file(filename):
 
 if __name__ == '__main__':
 	app.run()
+	#rool_back(2014,7)
 	#predict()
 	#MeQuery().get_all_me()

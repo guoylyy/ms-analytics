@@ -1,5 +1,5 @@
 'use strict';
-var DEBUG = false;
+var DEBUG = true;
 
 // Declare app level module which depends on filters, and services
 angular.module('myApp', [

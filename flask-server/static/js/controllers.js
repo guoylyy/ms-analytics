@@ -10,6 +10,14 @@ var view_tags = {'memos':'Memos',
                  'mep1':'ME+1'
                 };
 
+String.prototype.replaceAll = function(reallyDo, replaceWith, ignoreCase) {
+    if (!RegExp.prototype.isPrototypeOf(reallyDo)) {
+        return this.replace(new RegExp(reallyDo, (ignoreCase ? "gi": "g")), replaceWith);
+    } else {
+        return this.replace(reallyDo, replaceWith);
+    }
+}
+
 MyAppController.controller('MainPageController', ['$scope','DataService',function($scope,DataService) {
 	var _scope = $scope;
 	var categories = ['ME-1','ME','ME+1'];
@@ -92,6 +100,11 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
              }
         },
         done:function(e,result){
+            
+            var rst = result.result.replaceAll("&#34;",'\"');
+            rst = rst.substr(0,rst.length);
+            var lst = eval('('+rst+')');
+            alert(rst);
             if (result.result[3] == 'success'){
                 var results = result.result[0];
                 $("#sheetname").html("");
@@ -140,6 +153,7 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
     }
 }]);
   
+
 /*
     History Controller
 */  
