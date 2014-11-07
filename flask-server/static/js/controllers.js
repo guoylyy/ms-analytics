@@ -211,8 +211,7 @@ MyAppController.controller('HistroyCtrl', ['$scope','DataService', function($sco
                 rts.push(convertListToThousand(rc[i]));
             }
         rts.push(rc[2]);
-        _scope.results = rts;      
-
+        _scope.results = rts;
 	}
 
 }]);

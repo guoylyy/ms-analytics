@@ -50,7 +50,6 @@ MyAppServices.service('DataService',['$http',function($http){
 	this.getHistoryData = function(data_type,me_type){
 		var real_list = compositeList(this.all_data[data_type+"_real"],me_type);
 		var predict_list = compositeList(this.all_data[data_type+"_predict"],me_type);
-
 		return [predict_list.reverse(),real_list.reverse()];
 	}
 }]);
