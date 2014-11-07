@@ -60,13 +60,13 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         //_scope.real_data =  DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month);  
         //_scope.apes = calApes(_scope.recent_data,_scope.real_data);   
 
-        _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_year');
+        _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month,'last_year');
         _scope.recent_chart.series[0].setData(_scope.lastY);
 
-        _scope.lastQ = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_quarter');
+        _scope.lastQ = DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month,'last_quarter');
         _scope.recent_chart.series[1].setData(_scope.lastQ);  
 
-        _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_month');
+        _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month,'last_month');
         _scope.recent_chart.series[2].setData(_scope.lastM);
 
 	});
@@ -77,15 +77,15 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
         //_scope.apes = calApes(_scope.recent_data, _scope.real_data);
 
         _scope.recent_chart.series[3].setData(_scope.recent_data);
-
-        _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_month');
-        _scope.recent_chart.series[0].setData(_scope.lastM);
-
-         _scope.lastQ = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_quarter');
+        
+        _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month,'last_year');
+        _scope.recent_chart.series[0].setData(_scope.lastY);
+        
+        _scope.lastQ = DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month,'last_quarter');
         _scope.recent_chart.series[1].setData(_scope.lastQ);  
 
-        _scope.lastY = DataService.getCurrentData(_scope.current_data_src+"_predict",_scope.end_month,'last_year');
-        _scope.recent_chart.series[2].setData(_scope.lastY);
+        _scope.lastM = DataService.getCurrentData(_scope.current_data_src+"_real",_scope.end_month,'last_month');
+        _scope.recent_chart.series[2].setData(_scope.lastM);
 
         var title = 'Month End Prediction Of ' + view_tags[_scope.current_data_src];
         _scope.recent_chart.setTitle({text: title});   
@@ -104,17 +104,17 @@ MyAppController.controller('MainPageController', ['$scope','DataService',functio
             var rst = result.result.replaceAll("&#34;",'\"');
             rst = rst.substr(0,rst.length);
             var lst = eval('('+rst+')');
-            alert(rst);
-            if (result.result[3] == 'success'){
-                var results = result.result[0];
+            alert(lst);
+            if (lst[3] == 'success'){
+                var results = lst[0];
                 $("#sheetname").html("");
                 for(var i=0; i<results.length;i++){
                     var value = results[i];
                     var html = "<option value=\"" + value + "\">" + value + "</option>";
                     $("#sheetname").append(html);
                 }
-                $("#upload_bar").val(result.result[2]);
-                $("#filename").val(result.result[1]);
+                $("#upload_bar").val(lst[2]);
+                $("#filename").val(lst[1]);
             }else{
                 alert(result.result);
             }

@@ -137,9 +137,9 @@ function getLastQuarter(dtStr){
 
 function joinYearMonth(year, month){
 	if(month < 10){
-		return year + '-0' + (month-1);
+		return year + '-0' + (month);
 	}else{
-		return year + '-' + (month-1);
+		return year + '-' + (month);
 	}
 }
 

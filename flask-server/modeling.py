@@ -143,7 +143,9 @@ class Model(Maths):
         result = {'x': None, 'y': None}
         try:
             result['x'] = self._x_cal(year_month, data, para)
-        except:
+            print result['x']
+        except Exception,e:
+            print(e)
             return result
         result['y'] = {}
         for i in [0.95, 0.97, 0.99]:
@@ -208,9 +210,12 @@ class Model(Maths):
             data: list of rows ([[date, x], ...]).
         """
         year, month = year_month
-        me = self._checkdata(_medate(year, month), data)
-        me_m1 = self._checkdata(_preworkday(me), data)
+        #me = self._checkdata(_medate(year, month), data)
+        #me_m1 = self._checkdata(_preworkday(me), data)
+        me = _medate(year,month)
+        me_m1 = _preworkday(me)
         currdate = self._checkdata(_preworkday(me_m1), data) # me-2
+        #print currdate
         value = 0.0
         for i in range(5):
             value += dict(data)[currdate]
@@ -221,8 +226,10 @@ class Model(Maths):
         """Average value of rest of days(same week) before ME-1.
         """
         year, month = year_month
-        me = self._checkdata(_medate(year, month), data)
-        me_m1 = self._checkdata(_preworkday(me), data)
+        #me = self._checkdata(_medate(year, month), data)
+        #me_m1 = self._checkdata(_preworkday(me), data)
+        me = _medate(year,month)
+        me_m1 = _preworkday(me)
         currdate = self._checkdata(_preworkday(me_m1), data) # me-2
         N = currdate.date().weekday()
         count, data = 1, dict(data)
@@ -237,13 +244,17 @@ class Model(Maths):
     def _x_monthaver(self, year_month, data):
         """Average value from ME+2 to ME-2."""
         year, month = year_month
-        me = self._checkdata(_medate(year, month), data)
-        me_m1 = self._checkdata(_preworkday(me), data) # me-1
+        #me = self._checkdata(_medate(year, month), data)
+        #me_m1 = self._checkdata(_preworkday(me), data) # me-1
+
+        me = _medate(year,month)
+        me_m1 = _preworkday(me)
         me_p1 = self._checkdata(_str2date('%d/1/%d'%(month, year)), data, 
                                 False) # me+1
         currdate = self._checkdata(_postworkday(me_p1), data, False) # me+2
+        print currdate
         count, value, data = 0, 0.0, dict(data)
-        while currdate < me_m1:
+        while (currdate is not None) and (currdate < me_m1):
             if data.has_key(currdate):
                 value += data[currdate]
                 count += 1
@@ -256,6 +267,8 @@ class Model(Maths):
         if qmonth <= 0:
             qyear, qmonth = year-1, qmonth+12
         me = self._checkdata(_medate(qyear, qmonth), data)
+        #print me
+        #print dict(data)[me]
         return dict(data)[me]
 
     def _x_mem4(self, year_month, data):
@@ -411,9 +424,12 @@ class Modeling:
         result = {}
         tdata = [(i[0], i[1]) for i in data]
         result['tmem1'] = TMem1Model().predict(beta['tmem1'], tdata, year_month)
+        print 'tmemean'
         result['tmemean'] = TMemeanModel().predict(beta['tmemean'], tdata, year_month)
+        print 'tme'
         result['tme'] = TMeModel().predict(beta['tme'], tdata, year_month, result['tmemean']['y'])
         result['tmep1'] = TMep1Model().predict(beta['tmep1'], tdata, year_month)
+        
         mdata = [(i[0], i[2]) for i in data]
         result['mmem1'] = MMem1Model().predict(beta['mmem1'], mdata, year_month, result['tmem1']['x'])
         result['mme'] = MMeModel().predict(beta['mme'], mdata, year_month)
@@ -877,6 +893,7 @@ class NewTest(object):
     def run(self, data, months, me_facts):
         #filepath = "uploads/data.csv"
         data = data
+        print data
         beta = {
             'tmem1': self.generate_beta((49370077.5454166, 1.66201325669058, -0.794196017693839)),
             'tmemean': self.generate_beta((50988154.8637934, 0.105872702335176, 0.665913079984654)),
@@ -895,20 +912,13 @@ class NewTest(object):
             'mme': self.generate_p(2),
             'mmep1': self.generate_p(4),
         }
-        #months = months[]
-        #print months
         index = 0 
         final_list = []
-        for year_month in months:
-            
-            #print "%s-%s" %(year_month)
+        for year_month in months:            
             next_month = _next_year_month(year_month)
-            #print next_month
             result1 = Modeling().do_predict(beta, data, year_month)
             print year_month
-            if result1['tmep1']['x']: 
-                print [i*4.3 for i in result1['tmep1']['x']] 
-            #print result1['tmep1']['y']
+            print result1['tme']['y']
             for k in result1:
                 #print year_month,k
                 #print 'x:' + ' ' * 2 + str(result1[k]['x'])
@@ -932,8 +942,11 @@ class NewTest(object):
                 y_pred[i] = result1[i]['y']
 
             y = self.get_real(me_facts,months[index])
-            
+            #print y
+
             result2 = Modeling().do_revise(beta, p, x, y_pred, y)
+            print result2['tme']['p']
+            print result2['tme']['beta']
             for k in result2:
                 beta[k] = result2[k]['beta']
                 p[k] = result2[k]['p']
@@ -975,15 +988,9 @@ class NewTest(object):
 
 
 def main():
-    t = Test()
-    #tmem1 = t.test_tmem1()
-    #tmemean = t.test_tmemean()
-    #t.test_tme(tmemean)
-    #t.test_tmep1()
-    #t.test_mmem1(tmem1)
-    #mme = t.test_mme()
-    #t.test_mmep1(mme)
-    t.test_modeling()
+    me = _medate(2014,4)
+    print me 
+    print _preworkday(me)
 
 if __name__ == '__main__':
     main()
